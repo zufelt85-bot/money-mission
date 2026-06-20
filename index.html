@@ -162,18 +162,14 @@
       background: white;
     }
 
-    .foo-header {
-      cursor: pointer;
-    }
+    .foo-header { cursor: pointer; }
 
     .foo-details {
       display: none;
       margin-top: 15px;
     }
 
-    .foo-details.open {
-      display: block;
-    }
+    .foo-details.open { display: block; }
 
     .pill {
       display: inline-block;
@@ -310,8 +306,6 @@
     <p>Income: <strong class="green">$<span id="budgetIncome">0</span></strong></p>
     <p>Budgeted: <strong>$<span id="budgeted">0</span></strong></p>
     <p>To Be Budgeted: <strong class="green">$<span id="toBudget">0</span></strong></p>
-    <input id="incomeInput" type="number" placeholder="Enter monthly income">
-    <button onclick="saveIncome()">Save Income</button>
   </div>
 
   <div class="card">
@@ -407,91 +401,18 @@ let categories = JSON.parse(localStorage.getItem("categories")) || [];
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
 let txType = "expense";
-
 let fooOpen = JSON.parse(localStorage.getItem("fooOpen")) || {};
 
 let fooStepsData = JSON.parse(localStorage.getItem("fooStepsData")) || [
-  {
-    title: "Deductibles Covered",
-    subtitle: "Highest deductible covered",
-    guidance: "Save enough to cover your highest insurance deductible.",
-    target: 2500,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Employer Match",
-    subtitle: "Get the free money",
-    guidance: "Contribute enough to your employer-sponsored retirement plan to get the full employer match.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "High-Interest Debt",
-    subtitle: "Eliminate toxic debt",
-    guidance: "Pay off high-interest debt like credit cards and personal loans.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Emergency Fund",
-    subtitle: "3–6 months of expenses",
-    guidance: "Build a fully funded emergency fund.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Roth IRA / HSA",
-    subtitle: "Build tax-advantaged savings",
-    guidance: "Use Roth IRA and HSA options if available.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Max Retirement Accounts",
-    subtitle: "Max tax-advantaged accounts",
-    guidance: "Increase retirement contributions toward the annual maximum.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Hyper-Accumulation",
-    subtitle: "Invest beyond retirement accounts",
-    guidance: "Invest extra money after tax-advantaged options are strong.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Prepaid Future Expenses",
-    subtitle: "College, vehicles, big purchases",
-    guidance: "Save for future planned expenses.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  },
-  {
-    title: "Low-Interest Debt",
-    subtitle: "Pay off remaining low-interest debt",
-    guidance: "Pay off remaining low-interest debt after wealth-building steps are handled.",
-    target: 0,
-    current: 0,
-    status: "notstarted",
-    notes: ""
-  }
+  { title: "Deductibles Covered", subtitle: "Highest deductible covered", guidance: "Save enough to cover your highest insurance deductible.", target: 2500, current: 0, status: "notstarted", notes: "" },
+  { title: "Employer Match", subtitle: "Get the free money", guidance: "Contribute enough to your employer-sponsored retirement plan to get the full employer match.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "High-Interest Debt", subtitle: "Eliminate toxic debt", guidance: "Pay off high-interest debt like credit cards and personal loans.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "Emergency Fund", subtitle: "3–6 months of expenses", guidance: "Build a fully funded emergency fund.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "Roth IRA / HSA", subtitle: "Build tax-advantaged savings", guidance: "Use Roth IRA and HSA options if available.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "Max Retirement Accounts", subtitle: "Max tax-advantaged accounts", guidance: "Increase retirement contributions toward the annual maximum.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "Hyper-Accumulation", subtitle: "Invest beyond retirement accounts", guidance: "Invest extra money after tax-advantaged options are strong.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "Prepaid Future Expenses", subtitle: "College, vehicles, big purchases", guidance: "Save for future planned expenses.", target: 0, current: 0, status: "notstarted", notes: "" },
+  { title: "Low-Interest Debt", subtitle: "Pay off remaining low-interest debt", guidance: "Pay off remaining low-interest debt after wealth-building steps are handled.", target: 0, current: 0, status: "notstarted", notes: "" }
 ];
 
 function money(num) {
@@ -510,10 +431,8 @@ function saveAll() {
 function showScreen(id, tab) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   tab.classList.add("active");
-
   render();
 }
 
@@ -521,12 +440,6 @@ function goTab(id) {
   const tabs = document.querySelectorAll(".tab");
   const index = { home:0, foo:1, budget:2, activity:3, accounts:4 }[id];
   showScreen(id, tabs[index]);
-}
-
-function saveIncome() {
-  income = Number(document.getElementById("incomeInput").value) || 0;
-  saveAll();
-  render();
 }
 
 function addCategory() {
@@ -579,9 +492,7 @@ function renderCategoryDropdown() {
     return;
   }
 
-  select.innerHTML = categories.map((c, i) => `
-    <option value="${i}">${c.name}</option>
-  `).join("");
+  select.innerHTML = categories.map((c, i) => `<option value="${i}">${c.name}</option>`).join("");
 }
 
 function addTransaction() {
@@ -638,10 +549,8 @@ function addAccount() {
   }
 
   accounts.push({ name, balance, type });
-
   document.getElementById("accountName").value = "";
   document.getElementById("accountBalance").value = "";
-
   saveAll();
   render();
 }
@@ -697,7 +606,6 @@ function render() {
   document.getElementById("budgetIncome").innerText = money(income);
   document.getElementById("budgeted").innerText = money(totalBudgeted);
   document.getElementById("toBudget").innerText = money(toBudget);
-  document.getElementById("incomeInput").value = income || "";
 
   document.getElementById("fooCompleted").innerText = completedFoo;
   document.getElementById("fooPercent").innerText = percent;
@@ -834,4 +742,4 @@ render();
 </script>
 
 </body>
-      </html>
+  </html>
