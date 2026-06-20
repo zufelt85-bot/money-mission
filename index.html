@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Money Mission</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h1 { margin-bottom: 0; }
+    .card { background: white; padding: 15px; margin: 15px 0; border-radius: 12px; box-shadow: 0 2px 6px #ccc; }
+    input, button { width: 100%; padding: 12px; margin: 6px 0; font-size: 16px; box-sizing: border-box; }
+    button { background: #111; color: white; border: none; border-radius: 8px; }
+    .green { color: green; font-weight: bold; }
+    .red { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h1>Money Mission</h1>
+<p>YNAB-style budgeting + Money Guy FOO</p>
+
+<div class="card">
+  <h2>Monthly Income</h2>
+  <input id="income" type="number" placeholder="Enter monthly income">
+  <button onclick="saveIncome()">Save Income</button>
+</div>
+
+<div class="card">
+  <h2>Add Budget Category</h2>
+  <input id="catName" placeholder="Example: Groceries">
+  <input id="catAmount" type="number" placeholder="Amount assigned">
+  <button onclick="addCategory()">Add Category</button>
+</div>
+
+<div class="card">
+  <h2>Budget Summary</h2>
+  <p>Income: $<span id="showIncome">0</span></p>
+  <p>Assigned: $<span id="assigned">0</span></p>
+  <p>Left to Assign: $<span id="left">0</span></p>
+</div>
+
+<div class="card">
+  <h2>Your Categories</h2>
+  <div id="categories"></div>
+</div>
+
+<div class="card">
+  <h2>Money Guy FOO Check</h2>
+  <label><input type="checkbox" id="deductible"> Deductibles covered</label><br>
+  <label><input type="checkbox" id="match"> Getting employer match</label><br>
+  <label><input type="checkbox" id="debt"> High-interest debt paid off</label><br>
+  <label><input type="checkbox" id="emergency"> Emergency fund started</label><br>
+  <button onclick="checkFOO()">What should I do next?</button>
+  <p id="fooResult"></p>
+</div>
+
+<script>
+let income = Number(localStorage.getItem("income")) || 0;
+let categories = JSON.parse(localStorage.getItem("categories")) || [];
+
+function saveIncome() {
+  income = Number(document.getElementById("income").value);
+  localStorage.setItem("income", income);
+  render();
+}
+
+function addCategory() {
+  const name = document.getElementById("catName").value;
+  const amount = Number(document.getElementById("catAmount").value);
+
+  if (!name || amount <= 0) {
+    alert("Enter a category name and amount.");
+    return;
+  }
+
+  categories.push({ name, amount, spent: 0 });
+  localStorage.setItem("categories", JSON.stringify(categories));
+  document.getElementById("catName").value = "";
+  document.getElementById("catAmount").value = "";
+  render();
+}
+
+function spend(index) {
+  const amount = Number(prompt("How much did you spend?"));
+  if (amount > 0) {
+    categories[index].spent += amount;
+    localStorage.setItem("categories", JSON.stringify(categories));
+    render();
+  }
+}
+
+function deleteCategory(index) {
+  categories.splice(index, 1);
+  localStorage.setItem("categories", JSON.stringify(categories));
+  render();
+}
+
+function render() {
+  document.getElementById("income").value = income || "";
+  document.getElementById("showIncome").innerText = income.toFixed(2);
+
+  let assigned = categories.reduce((sum, c) => sum + c.amount, 0);
+  let left = income - assigned;
+
+  document.getElementById("assigned").innerText = assigned.toFixed(2);
+  document.getElementById("left").innerText = left.toFixed(2);
+  document.getElementById("left").className = left >= 0 ? "green" : "red";
+
+  let html = "";
+  categories.forEach((cat, index) => {
+    let remaining = cat.amount - cat.spent;
+    html += `
+      <div class="card">
+        <h3>${cat.name}</h3>
+        <p>Assigned: $${cat.amount.toFixed(2)}</p>
+        <p>Spent: $${cat.spent.toFixed(2)}</p>
+        <p>Remaining: $${remaining.toFixed(2)}</p>
+        <button onclick="spend(${index})">Add Spending</button>
+        <button onclick="deleteCategory(${index})">Delete</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("categories").innerHTML = html;
+}
+
+function checkFOO() {
+  if (!document.getElementById("deductible").checked) {
+    document.getElementById("fooResult").innerText = "Next: Build enough cash to cover your insurance deductibles.";
+  } else if (!document.getElementById("match").checked) {
+    document.getElementById("fooResult").innerText = "Next: Invest enough to get your full employer match.";
+  } else if (!document.getElementById("debt").checked) {
+    document.getElementById("fooResult").innerText = "Next: Attack high-interest debt.";
+  } else if (!document.getElementById("emergency").checked) {
+    document.getElementById("fooResult").innerText = "Next: Build your emergency fund.";
+  } else {
+    document.getElementById("fooResult").innerText = "Next: Increase retirement and investing goals.";
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
