@@ -19,18 +19,14 @@
       padding: 26px 18px;
     }
 
-    .screen.active {
-      display: block;
-    }
+    .screen.active { display: block; }
 
     h1 {
       font-size: 34px;
       margin: 0 0 5px;
     }
 
-    h2 {
-      margin-top: 0;
-    }
+    h2 { margin-top: 0; }
 
     .subtitle {
       color: #6b7280;
@@ -90,13 +86,8 @@
       font-weight: bold;
     }
 
-    .danger {
-      background: #dc2626;
-    }
-
-    .dark {
-      background: #111827;
-    }
+    .danger { background: #dc2626; }
+    .dark { background: #111827; }
 
     .row {
       display: flex;
@@ -151,6 +142,12 @@
       font-weight: bold;
     }
 
+    .tab.active span {
+      background: #dbeafe;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
     .foo-card.completed {
       background: #ecfdf5;
       border-color: #86efac;
@@ -163,6 +160,19 @@
 
     .foo-card.notstarted {
       background: white;
+    }
+
+    .foo-header {
+      cursor: pointer;
+    }
+
+    .foo-details {
+      display: none;
+      margin-top: 15px;
+    }
+
+    .foo-details.open {
+      display: block;
     }
 
     .pill {
@@ -207,9 +217,7 @@
       color: #16a34a;
     }
 
-    .tiny {
-      font-size: 13px;
-    }
+    .tiny { font-size: 13px; }
   </style>
 </head>
 
@@ -386,11 +394,11 @@
 </div>
 
 <div class="tabbar">
-  <div class="tab active" onclick="showScreen('home', this)"><span>⌂</span>Home</div>
-  <div class="tab" onclick="showScreen('foo', this)"><span>↗</span>FOO</div>
-  <div class="tab" onclick="showScreen('budget', this)"><span>▣</span>Budget</div>
-  <div class="tab" onclick="showScreen('activity', this)"><span>↕</span>Activity</div>
-  <div class="tab" onclick="showScreen('accounts', this)"><span>▤</span>Accounts</div>
+  <div class="tab active" onclick="showScreen('home', this)"><span>🏠</span>Home</div>
+  <div class="tab" onclick="showScreen('foo', this)"><span>🎯</span>FOO</div>
+  <div class="tab" onclick="showScreen('budget', this)"><span>💰</span>Budget</div>
+  <div class="tab" onclick="showScreen('activity', this)"><span>🧾</span>Activity</div>
+  <div class="tab" onclick="showScreen('accounts', this)"><span>🏦</span>Accounts</div>
 </div>
 
 <script>
@@ -399,6 +407,8 @@ let categories = JSON.parse(localStorage.getItem("categories")) || [];
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
 let txType = "expense";
+
+let fooOpen = JSON.parse(localStorage.getItem("fooOpen")) || {};
 
 let fooStepsData = JSON.parse(localStorage.getItem("fooStepsData")) || [
   {
@@ -494,6 +504,7 @@ function saveAll() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
   localStorage.setItem("accounts", JSON.stringify(accounts));
   localStorage.setItem("fooStepsData", JSON.stringify(fooStepsData));
+  localStorage.setItem("fooOpen", JSON.stringify(fooOpen));
 }
 
 function showScreen(id, tab) {
@@ -556,7 +567,6 @@ function setTxType(type) {
 
 function renderCategoryDropdown() {
   const select = document.getElementById("txCategory");
-
   if (!select) return;
 
   if (txType === "income") {
@@ -642,12 +652,19 @@ function deleteAccount(index) {
   render();
 }
 
+function toggleFooOpen(index) {
+  fooOpen[index] = !fooOpen[index];
+  saveAll();
+  render();
+}
+
 function updateFoo(index, field, value) {
   if (field === "target" || field === "current") {
     fooStepsData[index][field] = Number(value) || 0;
   } else {
     fooStepsData[index][field] = value;
   }
+
   saveAll();
   render();
 }
@@ -674,7 +691,8 @@ function render() {
   document.getElementById("homeNetWorth").innerText = money(netWorth);
   document.getElementById("homeAssets2").innerText = money(assets);
   document.getElementById("homeDebts2").innerText = money(debts);
-  document.getElementById("currentFooStep").innerText = currentFoo ? currentFoo.title + " — " + currentFoo.subtitle : "All steps completed.";
+  document.getElementById("currentFooStep").innerText =
+    currentFoo ? currentFoo.title + " — " + currentFoo.subtitle : "All steps completed.";
 
   document.getElementById("budgetIncome").innerText = money(income);
   document.getElementById("budgeted").innerText = money(totalBudgeted);
@@ -766,38 +784,47 @@ function render() {
 
   document.getElementById("fooSteps").innerHTML = fooStepsData.map((s, i) => {
     const pct = s.target > 0 ? Math.min(100, (s.current / s.target) * 100) : 0;
+    const isOpen = fooOpen[i];
+
     return `
       <div class="card foo-card ${s.status}">
-        <div class="row">
-          <div>
-            <strong>STEP ${i + 1}</strong>
-            <span class="pill ${s.status}">
-              ${s.status === "completed" ? "Completed" : s.status === "progress" ? "In Progress" : "Not Started"}
-            </span>
-            <h2>${s.title}</h2>
-            <p class="muted">${s.subtitle}</p>
+        <div class="foo-header" onclick="toggleFooOpen(${i})">
+          <div class="row">
+            <div>
+              <strong>STEP ${i + 1}</strong>
+              <span class="pill ${s.status}">
+                ${s.status === "completed" ? "Completed" : s.status === "progress" ? "In Progress" : "Not Started"}
+              </span>
+              <h2>${s.title}</h2>
+              <p class="muted">${s.subtitle}</p>
+            </div>
+            <h2>${isOpen ? "⌃" : "⌄"}</h2>
+          </div>
+
+          <div class="progress-bg">
+            <div class="progress-bar" style="width:${pct}%"></div>
           </div>
         </div>
 
-        <p>${s.guidance}</p>
+        <div class="foo-details ${isOpen ? "open" : ""}">
+          <p>${s.guidance}</p>
 
-        <label>Target Amount</label>
-        <input type="number" value="${s.target}" onchange="updateFoo(${i}, 'target', this.value)">
+          <label>Target Amount</label>
+          <input type="number" value="${s.target}" onchange="updateFoo(${i}, 'target', this.value)">
 
-        <label>Current Amount</label>
-        <input type="number" value="${s.current}" onchange="updateFoo(${i}, 'current', this.value)">
+          <label>Current Amount</label>
+          <input type="number" value="${s.current}" onchange="updateFoo(${i}, 'current', this.value)">
 
-        <div class="progress-bg"><div class="progress-bar" style="width:${pct}%"></div></div>
+          <label>Status</label>
+          <select onchange="updateFoo(${i}, 'status', this.value)">
+            <option value="notstarted" ${s.status === "notstarted" ? "selected" : ""}>Not Started</option>
+            <option value="progress" ${s.status === "progress" ? "selected" : ""}>In Progress</option>
+            <option value="completed" ${s.status === "completed" ? "selected" : ""}>Completed</option>
+          </select>
 
-        <label>Status</label>
-        <select onchange="updateFoo(${i}, 'status', this.value)">
-          <option value="notstarted" ${s.status === "notstarted" ? "selected" : ""}>Not Started</option>
-          <option value="progress" ${s.status === "progress" ? "selected" : ""}>In Progress</option>
-          <option value="completed" ${s.status === "completed" ? "selected" : ""}>Completed</option>
-        </select>
-
-        <label>Notes</label>
-        <textarea onchange="updateFoo(${i}, 'notes', this.value)">${s.notes}</textarea>
+          <label>Notes</label>
+          <textarea onchange="updateFoo(${i}, 'notes', this.value)">${s.notes}</textarea>
+        </div>
       </div>
     `;
   }).join("");
@@ -807,4 +834,4 @@ render();
 </script>
 
 </body>
-</html>
+      </html>
