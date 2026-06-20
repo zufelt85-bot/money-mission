@@ -14,18 +14,10 @@
       padding-bottom: 90px;
     }
 
-    .screen {
-      display: none;
-      padding: 26px 18px;
-    }
-
+    .screen { display: none; padding: 26px 18px; }
     .screen.active { display: block; }
 
-    h1 {
-      font-size: 34px;
-      margin: 0 0 5px;
-    }
-
+    h1 { font-size: 34px; margin: 0 0 5px; }
     h2 { margin-top: 0; }
 
     .subtitle {
@@ -49,10 +41,7 @@
       gap: 14px;
     }
 
-    .stat-title {
-      color: #6b7280;
-      font-size: 15px;
-    }
+    .stat-title { color: #6b7280; font-size: 15px; }
 
     .stat-number {
       font-size: 28px;
@@ -74,10 +63,7 @@
       border: 1px solid #d1d5db;
     }
 
-    textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
+    textarea { min-height: 80px; resize: vertical; }
 
     button {
       background: #2563eb;
@@ -148,19 +134,9 @@
       border-radius: 999px;
     }
 
-    .foo-card.completed {
-      background: #ecfdf5;
-      border-color: #86efac;
-    }
-
-    .foo-card.progress {
-      background: #eff6ff;
-      border-color: #93c5fd;
-    }
-
-    .foo-card.notstarted {
-      background: white;
-    }
+    .foo-card.completed { background: #ecfdf5; border-color: #86efac; }
+    .foo-card.progress { background: #eff6ff; border-color: #93c5fd; }
+    .foo-card.notstarted { background: white; }
 
     .foo-header { cursor: pointer; }
 
@@ -181,15 +157,8 @@
       color: #374151;
     }
 
-    .pill.completed {
-      background: #dcfce7;
-      color: #15803d;
-    }
-
-    .pill.progress {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
+    .pill.completed { background: #dcfce7; color: #15803d; }
+    .pill.progress { background: #dbeafe; color: #1d4ed8; }
 
     .expenseType {
       display: grid;
@@ -348,6 +317,8 @@
     </div>
 
     <input id="txAmount" type="number" placeholder="Amount">
+    <input id="txDate" type="date">
+    <select id="txAccount"></select>
     <select id="txCategory"></select>
     <input id="txName" placeholder="Payee / Description">
     <textarea id="txNote" placeholder="Notes optional"></textarea>
@@ -417,6 +388,10 @@ let fooStepsData = JSON.parse(localStorage.getItem("fooStepsData")) || [
 
 function money(num) {
   return Number(num || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function todayDate() {
+  return new Date().toISOString().split("T")[0];
 }
 
 function saveAll() {
@@ -495,8 +470,27 @@ function renderCategoryDropdown() {
   select.innerHTML = categories.map((c, i) => `<option value="${i}">${c.name}</option>`).join("");
 }
 
+function renderAccountDropdown() {
+  const select = document.getElementById("txAccount");
+  if (!select) return;
+
+  const assetAccounts = accounts.filter(a => a.type === "asset");
+
+  if (assetAccounts.length === 0) {
+    select.innerHTML = `<option value="">Add an asset account first</option>`;
+    return;
+  }
+
+  select.innerHTML = accounts.map((a, i) => {
+    if (a.type !== "asset") return "";
+    return `<option value="${i}">${a.name} — $${money(a.balance)}</option>`;
+  }).join("");
+}
+
 function addTransaction() {
   const amount = Number(document.getElementById("txAmount").value);
+  const date = document.getElementById("txDate").value || todayDate();
+  const accountValue = document.getElementById("txAccount").value;
   const name = document.getElementById("txName").value.trim();
   const note = document.getElementById("txNote").value.trim();
   const categoryValue = document.getElementById("txCategory").value;
@@ -506,19 +500,28 @@ function addTransaction() {
     return;
   }
 
+  if (accountValue === "") {
+    alert("Add and select an asset account first.");
+    return;
+  }
+
   if (txType === "expense" && categoryValue === "") {
     alert("Add a budget category first.");
     return;
   }
 
+  const accountIndex = Number(accountValue);
+  const accountName = accounts[accountIndex].name;
   let categoryName = "Income";
 
   if (txType === "expense") {
     const categoryIndex = Number(categoryValue);
     categories[categoryIndex].spent += amount;
+    accounts[accountIndex].balance -= amount;
     categoryName = categories[categoryIndex].name;
   } else {
     income += amount;
+    accounts[accountIndex].balance += amount;
   }
 
   transactions.unshift({
@@ -526,13 +529,15 @@ function addTransaction() {
     amount,
     type: txType,
     category: categoryName,
+    account: accountName,
     note,
-    date: new Date().toLocaleDateString()
+    date
   });
 
   document.getElementById("txAmount").value = "";
   document.getElementById("txName").value = "";
   document.getElementById("txNote").value = "";
+  document.getElementById("txDate").value = todayDate();
 
   saveAll();
   render();
@@ -651,6 +656,11 @@ function render() {
   document.getElementById("activityExpenses").innerText = money(monthExpenses);
 
   renderCategoryDropdown();
+  renderAccountDropdown();
+
+  if (document.getElementById("txDate") && !document.getElementById("txDate").value) {
+    document.getElementById("txDate").value = todayDate();
+  }
 
   document.getElementById("transactionList").innerHTML =
     transactions.length === 0
@@ -659,7 +669,7 @@ function render() {
         <div class="row" style="border-bottom:1px solid #e5e7eb; padding:12px 0;">
           <div>
             <strong>${t.name}</strong>
-            <p class="muted">${t.type} • ${t.category} • ${t.date}</p>
+            <p class="muted">${t.type} • ${t.category} • ${t.account || "No account"} • ${t.date}</p>
           </div>
           <h3 class="${t.type === 'income' ? 'green' : 'red'}">
             ${t.type === 'income' ? '+' : '-'}$${money(t.amount)}
@@ -742,4 +752,4 @@ render();
 </script>
 
 </body>
-  </html>
+</html>
