@@ -3,62 +3,347 @@
 <head>
   <title>Money Mission</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-    h1 { margin-bottom: 0; }
-    .card { background: white; padding: 15px; margin: 15px 0; border-radius: 12px; box-shadow: 0 2px 6px #ccc; }
-    input, button { width: 100%; padding: 12px; margin: 6px 0; font-size: 16px; box-sizing: border-box; }
-    button { background: #111; color: white; border: none; border-radius: 8px; }
-    .green { color: green; font-weight: bold; }
-    .red { color: red; font-weight: bold; }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #111827;
+      padding-bottom: 85px;
+    }
+
+    .screen {
+      display: none;
+      padding: 28px 18px;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 34px;
+      margin: 0 0 6px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 18px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 22px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .stat-title {
+      color: #6b7280;
+      font-size: 16px;
+    }
+
+    .stat-number {
+      font-size: 30px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .green { color: #2fac72; }
+    .red { color: #d62828; }
+    .blue { color: #1f73d8; }
+
+    input, select, button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+    }
+
+    button {
+      background: #1f73d8;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+
+    .small-btn {
+      background: #111827;
+      margin-top: 8px;
+    }
+
+    .danger {
+      background: #d62828;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-bg {
+      background: #e5e7eb;
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #1f73d8;
+      width: 0%;
+    }
+
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 76px;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #e5e7eb;
+      z-index: 99;
+    }
+
+    .tab {
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .tab span {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 3px;
+    }
+
+    .tab.active {
+      color: #1f73d8;
+      font-weight: bold;
+    }
+
+    .foo-step {
+      border-left: 6px solid #d1d5db;
+    }
+
+    .foo-step.done {
+      border-left-color: #2fac72;
+      background: #effaf5;
+    }
+
+    .foo-step.current {
+      border-left-color: #1f73d8;
+      background: #eef5ff;
+    }
+
+    .muted {
+      color: #6b7280;
+    }
   </style>
 </head>
+
 <body>
 
-<h1>Money Mission</h1>
-<p>YNAB-style budgeting + Money Guy FOO</p>
+  <!-- HOME -->
+  <div id="home" class="screen active">
+    <h1>Dashboard</h1>
+    <div class="subtitle">Your financial snapshot at a glance</div>
 
-<div class="card">
-  <h2>Monthly Income</h2>
-  <input id="income" type="number" placeholder="Enter monthly income">
-  <button onclick="saveIncome()">Save Income</button>
-</div>
+    <div class="grid">
+      <div class="card">
+        <div class="stat-title">Total Assets</div>
+        <div class="stat-number green">$<span id="homeAssets">0</span></div>
+      </div>
 
-<div class="card">
-  <h2>Add Budget Category</h2>
-  <input id="catName" placeholder="Example: Groceries">
-  <input id="catAmount" type="number" placeholder="Amount assigned">
-  <button onclick="addCategory()">Add Category</button>
-</div>
+      <div class="card">
+        <div class="stat-title">Total Debt</div>
+        <div class="stat-number red">$<span id="homeDebts">0</span></div>
+      </div>
 
-<div class="card">
-  <h2>Budget Summary</h2>
-  <p>Income: $<span id="showIncome">0</span></p>
-  <p>Assigned: $<span id="assigned">0</span></p>
-  <p>Left to Assign: $<span id="left">0</span></p>
-</div>
+      <div class="card">
+        <div class="stat-title">Monthly Budget</div>
+        <div class="stat-number">$<span id="homeBudget">0</span></div>
+      </div>
 
-<div class="card">
-  <h2>Your Categories</h2>
-  <div id="categories"></div>
-</div>
+      <div class="card">
+        <div class="stat-title">FOO Progress</div>
+        <div class="stat-number"><span id="homeFoo">0</span>/9</div>
+      </div>
+    </div>
 
-<div class="card">
-  <h2>Money Guy FOO Check</h2>
-  <label><input type="checkbox" id="deductible"> Deductibles covered</label><br>
-  <label><input type="checkbox" id="match"> Getting employer match</label><br>
-  <label><input type="checkbox" id="debt"> High-interest debt paid off</label><br>
-  <label><input type="checkbox" id="emergency"> Emergency fund started</label><br>
-  <button onclick="checkFOO()">What should I do next?</button>
-  <p id="fooResult"></p>
-</div>
+    <div class="card">
+      <h2>Budget Overview</h2>
+      <p>$<span id="homeRemaining">0</span> remaining</p>
+      <div id="homeBudgetList" class="muted">No budget categories yet</div>
+    </div>
+
+    <div class="card">
+      <h2>Net Worth</h2>
+      <div class="stat-number">$<span id="homeNetWorth">0</span></div>
+      <p><span class="green">Assets:</span> $<span id="homeAssets2">0</span></p>
+      <p><span class="red">Debts:</span> $<span id="homeDebts2">0</span></p>
+    </div>
+  </div>
+
+  <!-- FOO -->
+  <div id="foo" class="screen">
+    <h1>Financial Order of Operations</h1>
+    <div class="subtitle">The Money Guy 9-step wealth building framework</div>
+
+    <div class="card">
+      <div class="row">
+        <h2>Overall Progress</h2>
+        <strong><span id="fooPercent">0</span>%</strong>
+      </div>
+      <div class="progress-bg">
+        <div id="fooBar" class="progress-bar"></div>
+      </div>
+    </div>
+
+    <div id="fooSteps"></div>
+  </div>
+
+  <!-- BUDGET -->
+  <div id="budget" class="screen">
+    <h1>Budget</h1>
+    <div class="subtitle">Zero-based envelope budgeting</div>
+
+    <div class="card">
+      <h2>Monthly Income</h2>
+      <input id="incomeInput" type="number" placeholder="Enter monthly income">
+      <button onclick="saveIncome()">Save Income</button>
+    </div>
+
+    <div class="card">
+      <h2>Add Category</h2>
+      <input id="catName" placeholder="Category name, example: Groceries">
+      <input id="catAmount" type="number" placeholder="Amount budgeted">
+      <button onclick="addCategory()">Add Category</button>
+    </div>
+
+    <div class="card">
+      <h2>This Month</h2>
+      <p>Income: $<span id="budgetIncome">0</span></p>
+      <p>Budgeted: $<span id="budgeted">0</span></p>
+      <p>To Budget: $<span id="toBudget">0</span></p>
+    </div>
+
+    <div id="budgetCategories"></div>
+  </div>
+
+  <!-- ACTIVITY -->
+  <div id="activity" class="screen">
+    <h1>Transactions</h1>
+    <div class="subtitle">Track income and expenses</div>
+
+    <div class="card">
+      <h2>Add Transaction</h2>
+      <input id="txName" placeholder="Example: Walmart">
+      <input id="txAmount" type="number" placeholder="Amount">
+      <select id="txType">
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+      </select>
+      <button onclick="addTransaction()">Add Transaction</button>
+    </div>
+
+    <div id="transactionList"></div>
+  </div>
+
+  <!-- ACCOUNTS -->
+  <div id="accounts" class="screen">
+    <h1>Accounts</h1>
+    <div class="subtitle">Manage your financial accounts</div>
+
+    <div class="card">
+      <h2>Add Account</h2>
+      <input id="accountName" placeholder="Example: Checking, 401k, Credit Card">
+      <input id="accountBalance" type="number" placeholder="Balance">
+      <select id="accountType">
+        <option value="asset">Asset</option>
+        <option value="debt">Debt</option>
+      </select>
+      <button onclick="addAccount()">Add Account</button>
+    </div>
+
+    <div id="accountList"></div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tabbar">
+    <div class="tab active" onclick="showScreen('home', this)">
+      <span>▦</span>Home
+    </div>
+    <div class="tab" onclick="showScreen('foo', this)">
+      <span>↗</span>FOO
+    </div>
+    <div class="tab" onclick="showScreen('budget', this)">
+      <span>▣</span>Budget
+    </div>
+    <div class="tab" onclick="showScreen('activity', this)">
+      <span>↕</span>Activity
+    </div>
+    <div class="tab" onclick="showScreen('accounts', this)">
+      <span>▤</span>Accounts
+    </div>
+  </div>
 
 <script>
 let income = Number(localStorage.getItem("income")) || 0;
 let categories = JSON.parse(localStorage.getItem("categories")) || [];
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+let fooDone = JSON.parse(localStorage.getItem("fooDone")) || [];
+
+const fooList = [
+  "Deductibles Covered",
+  "Employer Match",
+  "High-Interest Debt",
+  "Emergency Fund",
+  "Roth IRA / HSA",
+  "Max Retirement",
+  "Hyper-Accumulation",
+  "Prepaid Future Expenses",
+  "Low-Interest Debt"
+];
+
+function money(num) {
+  return Number(num).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function showScreen(id, tab) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  tab.classList.add("active");
+
+  render();
+}
 
 function saveIncome() {
-  income = Number(document.getElementById("income").value);
+  income = Number(document.getElementById("incomeInput").value) || 0;
   localStorage.setItem("income", income);
   render();
 }
@@ -74,67 +359,200 @@ function addCategory() {
 
   categories.push({ name, amount, spent: 0 });
   localStorage.setItem("categories", JSON.stringify(categories));
+
   document.getElementById("catName").value = "";
   document.getElementById("catAmount").value = "";
   render();
 }
 
-function spend(index) {
+function spendFromCategory(index) {
   const amount = Number(prompt("How much did you spend?"));
   if (amount > 0) {
     categories[index].spent += amount;
-    localStorage.setItem("categories", JSON.stringify(categories));
+    transactions.unshift({
+      name: categories[index].name,
+      amount,
+      type: "expense",
+      date: new Date().toLocaleDateString()
+    });
+    saveAll();
     render();
   }
 }
 
 function deleteCategory(index) {
   categories.splice(index, 1);
-  localStorage.setItem("categories", JSON.stringify(categories));
+  saveAll();
   render();
 }
 
-function render() {
-  document.getElementById("income").value = income || "";
-  document.getElementById("showIncome").innerText = income.toFixed(2);
+function addTransaction() {
+  const name = document.getElementById("txName").value;
+  const amount = Number(document.getElementById("txAmount").value);
+  const type = document.getElementById("txType").value;
 
-  let assigned = categories.reduce((sum, c) => sum + c.amount, 0);
-  let left = income - assigned;
+  if (!name || amount <= 0) {
+    alert("Enter a name and amount.");
+    return;
+  }
 
-  document.getElementById("assigned").innerText = assigned.toFixed(2);
-  document.getElementById("left").innerText = left.toFixed(2);
-  document.getElementById("left").className = left >= 0 ? "green" : "red";
-
-  let html = "";
-  categories.forEach((cat, index) => {
-    let remaining = cat.amount - cat.spent;
-    html += `
-      <div class="card">
-        <h3>${cat.name}</h3>
-        <p>Assigned: $${cat.amount.toFixed(2)}</p>
-        <p>Spent: $${cat.spent.toFixed(2)}</p>
-        <p>Remaining: $${remaining.toFixed(2)}</p>
-        <button onclick="spend(${index})">Add Spending</button>
-        <button onclick="deleteCategory(${index})">Delete</button>
-      </div>
-    `;
+  transactions.unshift({
+    name,
+    amount,
+    type,
+    date: new Date().toLocaleDateString()
   });
 
-  document.getElementById("categories").innerHTML = html;
+  if (type === "income") {
+    income += amount;
+    localStorage.setItem("income", income);
+  }
+
+  saveAll();
+
+  document.getElementById("txName").value = "";
+  document.getElementById("txAmount").value = "";
+  render();
 }
 
-function checkFOO() {
-  if (!document.getElementById("deductible").checked) {
-    document.getElementById("fooResult").innerText = "Next: Build enough cash to cover your insurance deductibles.";
-  } else if (!document.getElementById("match").checked) {
-    document.getElementById("fooResult").innerText = "Next: Invest enough to get your full employer match.";
-  } else if (!document.getElementById("debt").checked) {
-    document.getElementById("fooResult").innerText = "Next: Attack high-interest debt.";
-  } else if (!document.getElementById("emergency").checked) {
-    document.getElementById("fooResult").innerText = "Next: Build your emergency fund.";
-  } else {
-    document.getElementById("fooResult").innerText = "Next: Increase retirement and investing goals.";
+function addAccount() {
+  const name = document.getElementById("accountName").value;
+  const balance = Number(document.getElementById("accountBalance").value);
+  const type = document.getElementById("accountType").value;
+
+  if (!name || balance <= 0) {
+    alert("Enter account name and balance.");
+    return;
   }
+
+  accounts.push({ name, balance, type });
+  saveAll();
+
+  document.getElementById("accountName").value = "";
+  document.getElementById("accountBalance").value = "";
+  render();
+}
+
+function deleteAccount(index) {
+  accounts.splice(index, 1);
+  saveAll();
+  render();
+}
+
+function toggleFoo(index) {
+  if (fooDone.includes(index)) {
+    fooDone = fooDone.filter(i => i !== index);
+  } else {
+    fooDone.push(index);
+  }
+
+  localStorage.setItem("fooDone", JSON.stringify(fooDone));
+  render();
+}
+
+function saveAll() {
+  localStorage.setItem("categories", JSON.stringify(categories));
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("accounts", JSON.stringify(accounts));
+}
+
+function render() {
+  const totalBudgeted = categories.reduce((sum, c) => sum + c.amount, 0);
+  const totalSpent = categories.reduce((sum, c) => sum + c.spent, 0);
+  const remaining = income - totalBudgeted;
+
+  const assets = accounts
+    .filter(a => a.type === "asset")
+    .reduce((sum, a) => sum + a.balance, 0);
+
+  const debts = accounts
+    .filter(a => a.type === "debt")
+    .reduce((sum, a) => sum + a.balance, 0);
+
+  const netWorth = assets - debts;
+
+  document.getElementById("homeAssets").innerText = money(assets);
+  document.getElementById("homeDebts").innerText = money(debts);
+  document.getElementById("homeBudget").innerText = money(totalBudgeted);
+  document.getElementById("homeRemaining").innerText = money(remaining);
+  document.getElementById("homeNetWorth").innerText = money(netWorth);
+  document.getElementById("homeAssets2").innerText = money(assets);
+  document.getElementById("homeDebts2").innerText = money(debts);
+  document.getElementById("homeFoo").innerText = fooDone.length;
+
+  document.getElementById("incomeInput").value = income || "";
+  document.getElementById("budgetIncome").innerText = money(income);
+  document.getElementById("budgeted").innerText = money(totalBudgeted);
+  document.getElementById("toBudget").innerText = money(remaining);
+
+  document.getElementById("homeBudgetList").innerHTML =
+    categories.length === 0
+      ? "No budget categories yet"
+      : categories.slice(0, 3).map(c => `<p>${c.name}: $${money(c.amount - c.spent)} left</p>`).join("");
+
+  document.getElementById("budgetCategories").innerHTML =
+    categories.length === 0
+      ? `<div class="card muted">No budget categories yet</div>`
+      : categories.map((c, i) => `
+        <div class="card">
+          <h2>${c.name}</h2>
+          <p>Budgeted: $${money(c.amount)}</p>
+          <p>Spent: $${money(c.spent)}</p>
+          <p>Remaining: $${money(c.amount - c.spent)}</p>
+          <button class="small-btn" onclick="spendFromCategory(${i})">Add Spending</button>
+          <button class="danger" onclick="deleteCategory(${i})">Delete</button>
+        </div>
+      `).join("");
+
+  document.getElementById("transactionList").innerHTML =
+    transactions.length === 0
+      ? `<div class="card muted">No transactions yet</div>`
+      : transactions.map(t => `
+        <div class="card row">
+          <div>
+            <h3>${t.name}</h3>
+            <p class="muted">${t.date}</p>
+          </div>
+          <h2 class="${t.type === 'income' ? 'green' : 'red'}">
+            ${t.type === 'income' ? '+' : '-'}$${money(t.amount)}
+          </h2>
+        </div>
+      `).join("");
+
+  document.getElementById("accountList").innerHTML =
+    accounts.length === 0
+      ? `<div class="card muted">No accounts yet</div>`
+      : accounts.map((a, i) => `
+        <div class="card">
+          <div class="row">
+            <div>
+              <h2>${a.name}</h2>
+              <p class="muted">${a.type === "asset" ? "Asset" : "Debt"}</p>
+            </div>
+            <h2 class="${a.type === "asset" ? "green" : "red"}">$${money(a.balance)}</h2>
+          </div>
+          <button class="danger" onclick="deleteAccount(${i})">Delete</button>
+        </div>
+      `).join("");
+
+  const percent = Math.round((fooDone.length / 9) * 100);
+  document.getElementById("fooPercent").innerText = percent;
+  document.getElementById("fooBar").style.width = percent + "%";
+
+  document.getElementById("fooSteps").innerHTML = fooList.map((step, i) => {
+    const done = fooDone.includes(i);
+    const current = !done && fooDone.length === i;
+
+    return `
+      <div class="card foo-step ${done ? "done" : ""} ${current ? "current" : ""}">
+        <h2>Step ${i + 1}: ${step}</h2>
+        <p class="muted">${done ? "Completed" : current ? "In Progress" : "Remaining"}</p>
+        <button onclick="toggleFoo(${i})">
+          ${done ? "Mark Not Done" : "Mark Completed"}
+        </button>
+      </div>
+    `;
+  }).join("");
 }
 
 render();
