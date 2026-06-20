@@ -3,21 +3,20 @@
 <head>
   <title>Money Mission</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f6f7fb;
+      background: #f6f8fb;
       color: #111827;
-      padding-bottom: 85px;
+      padding-bottom: 90px;
     }
 
     .screen {
       display: none;
-      padding: 28px 18px;
+      padding: 26px 18px;
     }
 
     .screen.active {
@@ -26,22 +25,26 @@
 
     h1 {
       font-size: 34px;
-      margin: 0 0 6px;
+      margin: 0 0 5px;
+    }
+
+    h2 {
+      margin-top: 0;
     }
 
     .subtitle {
       color: #6b7280;
       font-size: 18px;
-      margin-bottom: 25px;
+      margin-bottom: 22px;
     }
 
     .card {
       background: white;
-      border-radius: 22px;
-      padding: 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
       border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
     }
 
     .grid {
@@ -52,20 +55,21 @@
 
     .stat-title {
       color: #6b7280;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     .stat-number {
-      font-size: 30px;
+      font-size: 28px;
       font-weight: bold;
       margin-top: 10px;
     }
 
-    .green { color: #2fac72; }
-    .red { color: #d62828; }
-    .blue { color: #1f73d8; }
+    .green { color: #16a34a; }
+    .red { color: #dc2626; }
+    .blue { color: #2563eb; }
+    .muted { color: #6b7280; }
 
-    input, select, button {
+    input, select, textarea, button {
       width: 100%;
       padding: 14px;
       margin-top: 10px;
@@ -74,40 +78,44 @@
       border: 1px solid #d1d5db;
     }
 
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
     button {
-      background: #1f73d8;
+      background: #2563eb;
       color: white;
       border: none;
       font-weight: bold;
     }
 
-    .small-btn {
-      background: #111827;
-      margin-top: 8px;
+    .danger {
+      background: #dc2626;
     }
 
-    .danger {
-      background: #d62828;
+    .dark {
+      background: #111827;
     }
 
     .row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .progress-bg {
       background: #e5e7eb;
+      height: 10px;
       border-radius: 999px;
-      height: 12px;
       overflow: hidden;
-      margin-top: 12px;
+      margin-top: 8px;
     }
 
     .progress-bar {
       height: 100%;
-      background: #1f73d8;
+      background: #16a34a;
       width: 0%;
     }
 
@@ -116,19 +124,19 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 76px;
+      height: 78px;
       background: white;
+      border-top: 1px solid #e5e7eb;
       display: flex;
       justify-content: space-around;
       align-items: center;
-      border-top: 1px solid #e5e7eb;
       z-index: 99;
     }
 
     .tab {
       text-align: center;
-      color: #6b7280;
       font-size: 13px;
+      color: #6b7280;
       cursor: pointer;
     }
 
@@ -139,197 +147,353 @@
     }
 
     .tab.active {
-      color: #1f73d8;
+      color: #2563eb;
       font-weight: bold;
     }
 
-    .foo-step {
-      border-left: 6px solid #d1d5db;
+    .foo-card.completed {
+      background: #ecfdf5;
+      border-color: #86efac;
     }
 
-    .foo-step.done {
-      border-left-color: #2fac72;
-      background: #effaf5;
+    .foo-card.progress {
+      background: #eff6ff;
+      border-color: #93c5fd;
     }
 
-    .foo-step.current {
-      border-left-color: #1f73d8;
-      background: #eef5ff;
+    .foo-card.notstarted {
+      background: white;
     }
 
-    .muted {
-      color: #6b7280;
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .pill.completed {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .pill.progress {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .expenseType {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .typeBtn {
+      background: white;
+      color: #111827;
+      border: 1px solid #d1d5db;
+    }
+
+    .typeBtn.selectedExpense {
+      border: 2px solid #dc2626;
+      color: #dc2626;
+    }
+
+    .typeBtn.selectedIncome {
+      border: 2px solid #16a34a;
+      color: #16a34a;
+    }
+
+    .tiny {
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- HOME -->
-  <div id="home" class="screen active">
-    <h1>Dashboard</h1>
-    <div class="subtitle">Your financial snapshot at a glance</div>
+<div id="home" class="screen active">
+  <h1>Dashboard</h1>
+  <div class="subtitle">Your financial snapshot at a glance</div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="stat-title">Total Assets</div>
-        <div class="stat-number green">$<span id="homeAssets">0</span></div>
-      </div>
-
-      <div class="card">
-        <div class="stat-title">Total Debt</div>
-        <div class="stat-number red">$<span id="homeDebts">0</span></div>
-      </div>
-
-      <div class="card">
-        <div class="stat-title">Monthly Budget</div>
-        <div class="stat-number">$<span id="homeBudget">0</span></div>
-      </div>
-
-      <div class="card">
-        <div class="stat-title">FOO Progress</div>
-        <div class="stat-number"><span id="homeFoo">0</span>/9</div>
-      </div>
+  <div class="grid">
+    <div class="card">
+      <div class="stat-title">Total Assets</div>
+      <div class="stat-number green">$<span id="homeAssets">0</span></div>
     </div>
 
     <div class="card">
+      <div class="stat-title">Total Debt</div>
+      <div class="stat-number red">$<span id="homeDebts">0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="stat-title">Monthly Budget</div>
+      <div class="stat-number">$<span id="homeBudgeted">0</span></div>
+      <div class="muted tiny">of $<span id="homeIncomeSmall">0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="stat-title">FOO Progress</div>
+      <div class="stat-number"><span id="homeFooDone">0</span>/9</div>
+      <div class="muted tiny">steps completed</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
       <h2>Budget Overview</h2>
-      <p>$<span id="homeRemaining">0</span> remaining</p>
-      <div id="homeBudgetList" class="muted">No budget categories yet</div>
+      <span class="blue" onclick="goTab('budget')">View all →</span>
     </div>
+    <p class="green">$<span id="homeBudgetRemaining">0</span> remaining</p>
+    <div id="homeBudgetList"></div>
+  </div>
 
+  <div class="card">
+    <h2>Net Worth</h2>
+    <div class="stat-number">$<span id="homeNetWorth">0</span></div>
+    <p><span class="green">Assets:</span> $<span id="homeAssets2">0</span></p>
+    <p><span class="red">Debts:</span> $<span id="homeDebts2">0</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Current FOO Step</h2>
+    <p id="currentFooStep" class="muted"></p>
+  </div>
+</div>
+
+<div id="foo" class="screen">
+  <h1>Financial Order of Operations</h1>
+  <div class="subtitle">The Money Guy 9-step wealth building framework</div>
+
+  <div class="grid">
     <div class="card">
-      <h2>Net Worth</h2>
-      <div class="stat-number">$<span id="homeNetWorth">0</span></div>
-      <p><span class="green">Assets:</span> $<span id="homeAssets2">0</span></p>
-      <p><span class="red">Debts:</span> $<span id="homeDebts2">0</span></p>
+      <div class="stat-number green"><span id="fooCompleted">0</span></div>
+      <div class="muted">Completed</div>
+    </div>
+    <div class="card">
+      <div class="stat-number blue">1</div>
+      <div class="muted">In Progress</div>
     </div>
   </div>
 
-  <!-- FOO -->
-  <div id="foo" class="screen">
-    <h1>Financial Order of Operations</h1>
-    <div class="subtitle">The Money Guy 9-step wealth building framework</div>
-
-    <div class="card">
-      <div class="row">
-        <h2>Overall Progress</h2>
-        <strong><span id="fooPercent">0</span>%</strong>
-      </div>
-      <div class="progress-bg">
-        <div id="fooBar" class="progress-bar"></div>
-      </div>
+  <div class="card">
+    <div class="row">
+      <h2>Overall Progress</h2>
+      <strong><span id="fooPercent">0</span>%</strong>
     </div>
-
-    <div id="fooSteps"></div>
+    <div class="progress-bg">
+      <div id="fooBar" class="progress-bar"></div>
+    </div>
   </div>
 
-  <!-- BUDGET -->
-  <div id="budget" class="screen">
-    <h1>Budget</h1>
-    <div class="subtitle">Zero-based envelope budgeting</div>
+  <div id="fooSteps"></div>
+</div>
 
-    <div class="card">
-      <h2>Monthly Income</h2>
-      <input id="incomeInput" type="number" placeholder="Enter monthly income">
-      <button onclick="saveIncome()">Save Income</button>
-    </div>
+<div id="budget" class="screen">
+  <h1>Budget</h1>
+  <div class="subtitle">Zero-based envelope budgeting</div>
 
-    <div class="card">
-      <h2>Add Category</h2>
-      <input id="catName" placeholder="Category name, example: Groceries">
-      <input id="catAmount" type="number" placeholder="Amount budgeted">
-      <button onclick="addCategory()">Add Category</button>
-    </div>
+  <div class="card">
+    <h2>This Month</h2>
+    <p>Income: <strong class="green">$<span id="budgetIncome">0</span></strong></p>
+    <p>Budgeted: <strong>$<span id="budgeted">0</span></strong></p>
+    <p>To Be Budgeted: <strong class="green">$<span id="toBudget">0</span></strong></p>
+    <input id="incomeInput" type="number" placeholder="Enter monthly income">
+    <button onclick="saveIncome()">Save Income</button>
+  </div>
 
-    <div class="card">
-      <h2>This Month</h2>
-      <p>Income: $<span id="budgetIncome">0</span></p>
-      <p>Budgeted: $<span id="budgeted">0</span></p>
-      <p>To Budget: $<span id="toBudget">0</span></p>
-    </div>
+  <div class="card">
+    <h2>Add Category</h2>
+    <input id="catName" placeholder="Example: Groceries">
+    <input id="catAmount" type="number" placeholder="Budgeted amount">
+    <button onclick="addCategory()">+ Add Category</button>
+  </div>
 
+  <div class="card">
+    <h2>Budget Categories</h2>
     <div id="budgetCategories"></div>
   </div>
+</div>
 
-  <!-- ACTIVITY -->
-  <div id="activity" class="screen">
-    <h1>Transactions</h1>
-    <div class="subtitle">Track income and expenses</div>
+<div id="activity" class="screen">
+  <h1>Transactions</h1>
+  <div class="subtitle">Track your income and expenses</div>
 
+  <div class="grid">
     <div class="card">
-      <h2>Add Transaction</h2>
-      <input id="txName" placeholder="Example: Walmart">
-      <input id="txAmount" type="number" placeholder="Amount">
-      <select id="txType">
-        <option value="expense">Expense</option>
-        <option value="income">Income</option>
-      </select>
-      <button onclick="addTransaction()">Add Transaction</button>
+      <div class="stat-title">This Month</div>
+      <div class="stat-number green">$<span id="activityIncome">0</span></div>
+      <div class="muted">Income</div>
     </div>
 
+    <div class="card">
+      <div class="stat-title">This Month</div>
+      <div class="stat-number red">$<span id="activityExpenses">0</span></div>
+      <div class="muted">Expenses</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Add Transaction</h2>
+
+    <div class="expenseType">
+      <button id="expenseBtn" class="typeBtn selectedExpense" onclick="setTxType('expense')">↘ Expense</button>
+      <button id="incomeBtn" class="typeBtn" onclick="setTxType('income')">↗ Income</button>
+    </div>
+
+    <input id="txAmount" type="number" placeholder="Amount">
+    <select id="txCategory"></select>
+    <input id="txName" placeholder="Payee / Description">
+    <textarea id="txNote" placeholder="Notes optional"></textarea>
+
+    <button onclick="addTransaction()">+ Add Transaction</button>
+  </div>
+
+  <div class="card">
+    <h2>Recent Transactions</h2>
     <div id="transactionList"></div>
   </div>
+</div>
 
-  <!-- ACCOUNTS -->
-  <div id="accounts" class="screen">
-    <h1>Accounts</h1>
-    <div class="subtitle">Manage your financial accounts</div>
+<div id="accounts" class="screen">
+  <h1>Accounts</h1>
+  <div class="subtitle">Manage your financial accounts</div>
 
-    <div class="card">
-      <h2>Add Account</h2>
-      <input id="accountName" placeholder="Example: Checking, 401k, Credit Card">
-      <input id="accountBalance" type="number" placeholder="Balance">
-      <select id="accountType">
-        <option value="asset">Asset</option>
-        <option value="debt">Debt</option>
-      </select>
-      <button onclick="addAccount()">Add Account</button>
-    </div>
-
-    <div id="accountList"></div>
+  <div class="card">
+    <h2>Add Account</h2>
+    <input id="accountName" placeholder="Example: Checking, 401k, Credit Card">
+    <input id="accountBalance" type="number" placeholder="Balance">
+    <select id="accountType">
+      <option value="asset">Asset</option>
+      <option value="debt">Debt</option>
+    </select>
+    <button onclick="addAccount()">+ Add Account</button>
   </div>
 
-  <!-- TAB BAR -->
-  <div class="tabbar">
-    <div class="tab active" onclick="showScreen('home', this)">
-      <span>▦</span>Home
-    </div>
-    <div class="tab" onclick="showScreen('foo', this)">
-      <span>↗</span>FOO
-    </div>
-    <div class="tab" onclick="showScreen('budget', this)">
-      <span>▣</span>Budget
-    </div>
-    <div class="tab" onclick="showScreen('activity', this)">
-      <span>↕</span>Activity
-    </div>
-    <div class="tab" onclick="showScreen('accounts', this)">
-      <span>▤</span>Accounts
-    </div>
+  <div class="card">
+    <h2 class="green">Assets</h2>
+    <div id="assetList"></div>
   </div>
+
+  <div class="card">
+    <h2 class="red">Debts</h2>
+    <div id="debtList"></div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <div class="tab active" onclick="showScreen('home', this)"><span>⌂</span>Home</div>
+  <div class="tab" onclick="showScreen('foo', this)"><span>↗</span>FOO</div>
+  <div class="tab" onclick="showScreen('budget', this)"><span>▣</span>Budget</div>
+  <div class="tab" onclick="showScreen('activity', this)"><span>↕</span>Activity</div>
+  <div class="tab" onclick="showScreen('accounts', this)"><span>▤</span>Accounts</div>
+</div>
 
 <script>
 let income = Number(localStorage.getItem("income")) || 0;
 let categories = JSON.parse(localStorage.getItem("categories")) || [];
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
-let fooDone = JSON.parse(localStorage.getItem("fooDone")) || [];
+let txType = "expense";
 
-const fooList = [
-  "Deductibles Covered",
-  "Employer Match",
-  "High-Interest Debt",
-  "Emergency Fund",
-  "Roth IRA / HSA",
-  "Max Retirement",
-  "Hyper-Accumulation",
-  "Prepaid Future Expenses",
-  "Low-Interest Debt"
+let fooStepsData = JSON.parse(localStorage.getItem("fooStepsData")) || [
+  {
+    title: "Deductibles Covered",
+    subtitle: "Highest deductible covered",
+    guidance: "Save enough to cover your highest insurance deductible.",
+    target: 2500,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Employer Match",
+    subtitle: "Get the free money",
+    guidance: "Contribute enough to your employer-sponsored retirement plan to get the full employer match.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "High-Interest Debt",
+    subtitle: "Eliminate toxic debt",
+    guidance: "Pay off high-interest debt like credit cards and personal loans.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Emergency Fund",
+    subtitle: "3–6 months of expenses",
+    guidance: "Build a fully funded emergency fund.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Roth IRA / HSA",
+    subtitle: "Build tax-advantaged savings",
+    guidance: "Use Roth IRA and HSA options if available.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Max Retirement Accounts",
+    subtitle: "Max tax-advantaged accounts",
+    guidance: "Increase retirement contributions toward the annual maximum.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Hyper-Accumulation",
+    subtitle: "Invest beyond retirement accounts",
+    guidance: "Invest extra money after tax-advantaged options are strong.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Prepaid Future Expenses",
+    subtitle: "College, vehicles, big purchases",
+    guidance: "Save for future planned expenses.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  },
+  {
+    title: "Low-Interest Debt",
+    subtitle: "Pay off remaining low-interest debt",
+    guidance: "Pay off remaining low-interest debt after wealth-building steps are handled.",
+    target: 0,
+    current: 0,
+    status: "notstarted",
+    notes: ""
+  }
 ];
 
 function money(num) {
-  return Number(num).toLocaleString(undefined, { maximumFractionDigits: 0 });
+  return Number(num || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function saveAll() {
+  localStorage.setItem("income", income);
+  localStorage.setItem("categories", JSON.stringify(categories));
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("accounts", JSON.stringify(accounts));
+  localStorage.setItem("fooStepsData", JSON.stringify(fooStepsData));
 }
 
 function showScreen(id, tab) {
@@ -342,42 +506,32 @@ function showScreen(id, tab) {
   render();
 }
 
+function goTab(id) {
+  const tabs = document.querySelectorAll(".tab");
+  const index = { home:0, foo:1, budget:2, activity:3, accounts:4 }[id];
+  showScreen(id, tabs[index]);
+}
+
 function saveIncome() {
   income = Number(document.getElementById("incomeInput").value) || 0;
-  localStorage.setItem("income", income);
+  saveAll();
   render();
 }
 
 function addCategory() {
-  const name = document.getElementById("catName").value;
+  const name = document.getElementById("catName").value.trim();
   const amount = Number(document.getElementById("catAmount").value);
 
   if (!name || amount <= 0) {
-    alert("Enter a category name and amount.");
+    alert("Enter category name and amount.");
     return;
   }
 
   categories.push({ name, amount, spent: 0 });
-  localStorage.setItem("categories", JSON.stringify(categories));
-
   document.getElementById("catName").value = "";
   document.getElementById("catAmount").value = "";
+  saveAll();
   render();
-}
-
-function spendFromCategory(index) {
-  const amount = Number(prompt("How much did you spend?"));
-  if (amount > 0) {
-    categories[index].spent += amount;
-    transactions.unshift({
-      name: categories[index].name,
-      amount,
-      type: "expense",
-      date: new Date().toLocaleDateString()
-    });
-    saveAll();
-    render();
-  }
 }
 
 function deleteCategory(index) {
@@ -386,37 +540,85 @@ function deleteCategory(index) {
   render();
 }
 
-function addTransaction() {
-  const name = document.getElementById("txName").value;
-  const amount = Number(document.getElementById("txAmount").value);
-  const type = document.getElementById("txType").value;
+function setTxType(type) {
+  txType = type;
+  document.getElementById("expenseBtn").className = "typeBtn";
+  document.getElementById("incomeBtn").className = "typeBtn";
 
-  if (!name || amount <= 0) {
-    alert("Enter a name and amount.");
+  if (type === "expense") {
+    document.getElementById("expenseBtn").classList.add("selectedExpense");
+  } else {
+    document.getElementById("incomeBtn").classList.add("selectedIncome");
+  }
+
+  renderCategoryDropdown();
+}
+
+function renderCategoryDropdown() {
+  const select = document.getElementById("txCategory");
+
+  if (!select) return;
+
+  if (txType === "income") {
+    select.innerHTML = `<option value="Income">Income</option>`;
     return;
+  }
+
+  if (categories.length === 0) {
+    select.innerHTML = `<option value="">Add budget categories first</option>`;
+    return;
+  }
+
+  select.innerHTML = categories.map((c, i) => `
+    <option value="${i}">${c.name}</option>
+  `).join("");
+}
+
+function addTransaction() {
+  const amount = Number(document.getElementById("txAmount").value);
+  const name = document.getElementById("txName").value.trim();
+  const note = document.getElementById("txNote").value.trim();
+  const categoryValue = document.getElementById("txCategory").value;
+
+  if (amount <= 0 || !name) {
+    alert("Enter amount and description.");
+    return;
+  }
+
+  if (txType === "expense" && categoryValue === "") {
+    alert("Add a budget category first.");
+    return;
+  }
+
+  let categoryName = "Income";
+
+  if (txType === "expense") {
+    const categoryIndex = Number(categoryValue);
+    categories[categoryIndex].spent += amount;
+    categoryName = categories[categoryIndex].name;
+  } else {
+    income += amount;
   }
 
   transactions.unshift({
     name,
     amount,
-    type,
+    type: txType,
+    category: categoryName,
+    note,
     date: new Date().toLocaleDateString()
   });
 
-  if (type === "income") {
-    income += amount;
-    localStorage.setItem("income", income);
-  }
+  document.getElementById("txAmount").value = "";
+  document.getElementById("txName").value = "";
+  document.getElementById("txNote").value = "";
 
   saveAll();
-
-  document.getElementById("txName").value = "";
-  document.getElementById("txAmount").value = "";
   render();
 }
 
 function addAccount() {
-  const name = document.getElementById("accountName").value;
+  const name = document.getElementById("accountName").value.trim();
   const balance = Number(document.getElementById("accountBalance").value);
   const type = document.getElementById("accountType").value;
 
@@ -426,10 +628,11 @@ function addAccount() {
   }
 
   accounts.push({ name, balance, type });
-  saveAll();
 
   document.getElementById("accountName").value = "";
   document.getElementById("accountBalance").value = "";
+
+  saveAll();
   render();
 }
 
@@ -439,117 +642,162 @@ function deleteAccount(index) {
   render();
 }
 
-function toggleFoo(index) {
-  if (fooDone.includes(index)) {
-    fooDone = fooDone.filter(i => i !== index);
+function updateFoo(index, field, value) {
+  if (field === "target" || field === "current") {
+    fooStepsData[index][field] = Number(value) || 0;
   } else {
-    fooDone.push(index);
+    fooStepsData[index][field] = value;
   }
-
-  localStorage.setItem("fooDone", JSON.stringify(fooDone));
+  saveAll();
   render();
-}
-
-function saveAll() {
-  localStorage.setItem("categories", JSON.stringify(categories));
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-  localStorage.setItem("accounts", JSON.stringify(accounts));
 }
 
 function render() {
   const totalBudgeted = categories.reduce((sum, c) => sum + c.amount, 0);
   const totalSpent = categories.reduce((sum, c) => sum + c.spent, 0);
-  const remaining = income - totalBudgeted;
+  const toBudget = income - totalBudgeted;
 
-  const assets = accounts
-    .filter(a => a.type === "asset")
-    .reduce((sum, a) => sum + a.balance, 0);
-
-  const debts = accounts
-    .filter(a => a.type === "debt")
-    .reduce((sum, a) => sum + a.balance, 0);
-
+  const assets = accounts.filter(a => a.type === "asset").reduce((sum, a) => sum + a.balance, 0);
+  const debts = accounts.filter(a => a.type === "debt").reduce((sum, a) => sum + a.balance, 0);
   const netWorth = assets - debts;
+
+  const completedFoo = fooStepsData.filter(s => s.status === "completed").length;
+  const percent = Math.round((completedFoo / 9) * 100);
+  const currentFoo = fooStepsData.find(s => s.status !== "completed");
 
   document.getElementById("homeAssets").innerText = money(assets);
   document.getElementById("homeDebts").innerText = money(debts);
-  document.getElementById("homeBudget").innerText = money(totalBudgeted);
-  document.getElementById("homeRemaining").innerText = money(remaining);
+  document.getElementById("homeBudgeted").innerText = money(totalBudgeted);
+  document.getElementById("homeIncomeSmall").innerText = money(income);
+  document.getElementById("homeFooDone").innerText = completedFoo;
+  document.getElementById("homeBudgetRemaining").innerText = money(income - totalSpent);
   document.getElementById("homeNetWorth").innerText = money(netWorth);
   document.getElementById("homeAssets2").innerText = money(assets);
   document.getElementById("homeDebts2").innerText = money(debts);
-  document.getElementById("homeFoo").innerText = fooDone.length;
+  document.getElementById("currentFooStep").innerText = currentFoo ? currentFoo.title + " — " + currentFoo.subtitle : "All steps completed.";
 
-  document.getElementById("incomeInput").value = income || "";
   document.getElementById("budgetIncome").innerText = money(income);
   document.getElementById("budgeted").innerText = money(totalBudgeted);
-  document.getElementById("toBudget").innerText = money(remaining);
+  document.getElementById("toBudget").innerText = money(toBudget);
+  document.getElementById("incomeInput").value = income || "";
 
-  document.getElementById("homeBudgetList").innerHTML =
-    categories.length === 0
-      ? "No budget categories yet"
-      : categories.slice(0, 3).map(c => `<p>${c.name}: $${money(c.amount - c.spent)} left</p>`).join("");
-
-  document.getElementById("budgetCategories").innerHTML =
-    categories.length === 0
-      ? `<div class="card muted">No budget categories yet</div>`
-      : categories.map((c, i) => `
-        <div class="card">
-          <h2>${c.name}</h2>
-          <p>Budgeted: $${money(c.amount)}</p>
-          <p>Spent: $${money(c.spent)}</p>
-          <p>Remaining: $${money(c.amount - c.spent)}</p>
-          <button class="small-btn" onclick="spendFromCategory(${i})">Add Spending</button>
-          <button class="danger" onclick="deleteCategory(${i})">Delete</button>
-        </div>
-      `).join("");
-
-  document.getElementById("transactionList").innerHTML =
-    transactions.length === 0
-      ? `<div class="card muted">No transactions yet</div>`
-      : transactions.map(t => `
-        <div class="card row">
-          <div>
-            <h3>${t.name}</h3>
-            <p class="muted">${t.date}</p>
-          </div>
-          <h2 class="${t.type === 'income' ? 'green' : 'red'}">
-            ${t.type === 'income' ? '+' : '-'}$${money(t.amount)}
-          </h2>
-        </div>
-      `).join("");
-
-  document.getElementById("accountList").innerHTML =
-    accounts.length === 0
-      ? `<div class="card muted">No accounts yet</div>`
-      : accounts.map((a, i) => `
-        <div class="card">
-          <div class="row">
-            <div>
-              <h2>${a.name}</h2>
-              <p class="muted">${a.type === "asset" ? "Asset" : "Debt"}</p>
-            </div>
-            <h2 class="${a.type === "asset" ? "green" : "red"}">$${money(a.balance)}</h2>
-          </div>
-          <button class="danger" onclick="deleteAccount(${i})">Delete</button>
-        </div>
-      `).join("");
-
-  const percent = Math.round((fooDone.length / 9) * 100);
+  document.getElementById("fooCompleted").innerText = completedFoo;
   document.getElementById("fooPercent").innerText = percent;
   document.getElementById("fooBar").style.width = percent + "%";
 
-  document.getElementById("fooSteps").innerHTML = fooList.map((step, i) => {
-    const done = fooDone.includes(i);
-    const current = !done && fooDone.length === i;
+  document.getElementById("homeBudgetList").innerHTML =
+    categories.length === 0
+      ? `<p class="muted">No budget categories yet</p>`
+      : categories.slice(0, 5).map(c => {
+        const remaining = c.amount - c.spent;
+        const pct = c.amount > 0 ? Math.min(100, (c.spent / c.amount) * 100) : 0;
+        return `
+          <p>${c.name} <span style="float:right">$${money(remaining)} / $${money(c.amount)}</span></p>
+          <div class="progress-bg"><div class="progress-bar" style="width:${pct}%"></div></div>
+        `;
+      }).join("");
 
+  document.getElementById("budgetCategories").innerHTML =
+    categories.length === 0
+      ? `<p class="muted">No budget categories yet.</p>`
+      : categories.map((c, i) => {
+        const remaining = c.amount - c.spent;
+        const pct = c.amount > 0 ? Math.min(100, (c.spent / c.amount) * 100) : 0;
+        return `
+          <div class="card">
+            <div class="row">
+              <div>
+                <h3>${c.name}</h3>
+                <p class="muted">$${money(c.amount)} budgeted</p>
+              </div>
+              <h3 class="${remaining >= 0 ? 'green' : 'red'}">$${money(remaining)}</h3>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:${pct}%"></div></div>
+            <button class="danger" onclick="deleteCategory(${i})">Delete Category</button>
+          </div>
+        `;
+      }).join("");
+
+  const monthIncome = transactions.filter(t => t.type === "income").reduce((s,t) => s + t.amount, 0);
+  const monthExpenses = transactions.filter(t => t.type === "expense").reduce((s,t) => s + t.amount, 0);
+
+  document.getElementById("activityIncome").innerText = money(monthIncome);
+  document.getElementById("activityExpenses").innerText = money(monthExpenses);
+
+  renderCategoryDropdown();
+
+  document.getElementById("transactionList").innerHTML =
+    transactions.length === 0
+      ? `<p class="muted">No transactions yet.</p>`
+      : transactions.map(t => `
+        <div class="row" style="border-bottom:1px solid #e5e7eb; padding:12px 0;">
+          <div>
+            <strong>${t.name}</strong>
+            <p class="muted">${t.type} • ${t.category} • ${t.date}</p>
+          </div>
+          <h3 class="${t.type === 'income' ? 'green' : 'red'}">
+            ${t.type === 'income' ? '+' : '-'}$${money(t.amount)}
+          </h3>
+        </div>
+      `).join("");
+
+  const assetsHtml = accounts.map((a, i) => a.type === "asset" ? `
+    <div class="row" style="border-bottom:1px solid #e5e7eb; padding:12px 0;">
+      <div><strong>${a.name}</strong><p class="muted">Asset</p></div>
+      <div>
+        <h3 class="green">$${money(a.balance)}</h3>
+        <button class="danger" onclick="deleteAccount(${i})">Delete</button>
+      </div>
+    </div>
+  ` : "").join("");
+
+  const debtsHtml = accounts.map((a, i) => a.type === "debt" ? `
+    <div class="row" style="border-bottom:1px solid #e5e7eb; padding:12px 0;">
+      <div><strong>${a.name}</strong><p class="muted">Debt</p></div>
+      <div>
+        <h3 class="red">$${money(a.balance)}</h3>
+        <button class="danger" onclick="deleteAccount(${i})">Delete</button>
+      </div>
+    </div>
+  ` : "").join("");
+
+  document.getElementById("assetList").innerHTML = assetsHtml || `<p class="muted">No assets yet.</p>`;
+  document.getElementById("debtList").innerHTML = debtsHtml || `<p class="muted">No debts yet.</p>`;
+
+  document.getElementById("fooSteps").innerHTML = fooStepsData.map((s, i) => {
+    const pct = s.target > 0 ? Math.min(100, (s.current / s.target) * 100) : 0;
     return `
-      <div class="card foo-step ${done ? "done" : ""} ${current ? "current" : ""}">
-        <h2>Step ${i + 1}: ${step}</h2>
-        <p class="muted">${done ? "Completed" : current ? "In Progress" : "Remaining"}</p>
-        <button onclick="toggleFoo(${i})">
-          ${done ? "Mark Not Done" : "Mark Completed"}
-        </button>
+      <div class="card foo-card ${s.status}">
+        <div class="row">
+          <div>
+            <strong>STEP ${i + 1}</strong>
+            <span class="pill ${s.status}">
+              ${s.status === "completed" ? "Completed" : s.status === "progress" ? "In Progress" : "Not Started"}
+            </span>
+            <h2>${s.title}</h2>
+            <p class="muted">${s.subtitle}</p>
+          </div>
+        </div>
+
+        <p>${s.guidance}</p>
+
+        <label>Target Amount</label>
+        <input type="number" value="${s.target}" onchange="updateFoo(${i}, 'target', this.value)">
+
+        <label>Current Amount</label>
+        <input type="number" value="${s.current}" onchange="updateFoo(${i}, 'current', this.value)">
+
+        <div class="progress-bg"><div class="progress-bar" style="width:${pct}%"></div></div>
+
+        <label>Status</label>
+        <select onchange="updateFoo(${i}, 'status', this.value)">
+          <option value="notstarted" ${s.status === "notstarted" ? "selected" : ""}>Not Started</option>
+          <option value="progress" ${s.status === "progress" ? "selected" : ""}>In Progress</option>
+          <option value="completed" ${s.status === "completed" ? "selected" : ""}>Completed</option>
+        </select>
+
+        <label>Notes</label>
+        <textarea onchange="updateFoo(${i}, 'notes', this.value)">${s.notes}</textarea>
       </div>
     `;
   }).join("");
