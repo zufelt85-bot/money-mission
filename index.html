@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Money Mission V4</title>
+  <title>Money Mission V5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; }
@@ -61,6 +61,29 @@
       padding: 16px;
       border-radius: 16px;
       margin-bottom: 16px;
+    }
+
+    .info-btn {
+      width: auto;
+      padding: 8px 12px;
+      margin-top: 0;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 16px;
+      border: none;
+    }
+
+    .info-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .info-box h3 {
+      margin-bottom: 4px;
     }
 
     .row {
@@ -338,23 +361,132 @@
 </div>
 
 <script>
-let income = Number(localStorage.getItem("v4_income")) || 0;
-let accounts = JSON.parse(localStorage.getItem("v4_accounts")) || [];
-let categories = JSON.parse(localStorage.getItem("v4_categories")) || [];
-let transactions = JSON.parse(localStorage.getItem("v4_transactions")) || [];
+let income = Number(localStorage.getItem("v5_income")) || 0;
+let accounts = JSON.parse(localStorage.getItem("v5_accounts")) || [];
+let categories = JSON.parse(localStorage.getItem("v5_categories")) || [];
+let transactions = JSON.parse(localStorage.getItem("v5_transactions")) || [];
 let txType = "expense";
-let fooOpen = JSON.parse(localStorage.getItem("v4_fooOpen")) || {};
+let fooOpen = JSON.parse(localStorage.getItem("v5_fooOpen")) || {};
+let fooInfoOpen = JSON.parse(localStorage.getItem("v5_fooInfoOpen")) || {};
 
-let fooSteps = JSON.parse(localStorage.getItem("v4_fooSteps")) || [
-  { title:"Deductibles Covered", type:"dollar", target:2500, current:0, guidance:"Save enough to cover your highest insurance deductible." },
-  { title:"Employer Match", type:"percent", target:5, current:0, guidance:"Contribute enough to get your full employer match." },
-  { title:"High-Interest Debt", type:"highDebt", target:0, current:0, guidance:"Pay off toxic high-interest debt." },
-  { title:"Emergency Fund", type:"dollar", target:10000, current:0, guidance:"Build 3–6 months of expenses." },
-  { title:"Roth IRA / HSA", type:"percent", target:10, current:0, guidance:"Build tax-advantaged savings." },
-  { title:"Max Retirement", type:"percent", target:15, current:0, guidance:"Increase retirement contributions." },
-  { title:"Hyper-Accumulation", type:"percent", target:25, current:0, guidance:"Invest beyond retirement accounts." },
-  { title:"Prepaid Future Expenses", type:"dollar", target:5000, current:0, guidance:"Save for future planned expenses." },
-  { title:"Low-Interest Debt", type:"lowDebt", target:0, current:0, guidance:"Pay down remaining low-interest debt." }
+let fooSteps = JSON.parse(localStorage.getItem("v5_fooSteps")) || [
+  {
+    title:"Deductibles Covered",
+    type:"dollar",
+    target:2500,
+    current:0,
+    guidance:"Save enough to cover your highest insurance deductible.",
+    detail:{
+      meaning:"This is your first safety buffer. You want enough cash to cover the largest deductible you could be hit with, such as health insurance, auto insurance, or homeowners insurance.",
+      action:"Look at all your insurance deductibles. Pick the highest realistic one, then set that as this step target. Keep this money in a safe cash account, not invested.",
+      tracking:"Link a budget category to Step 1. The app will count the balance of the linked account toward this step.",
+      key:"This money later becomes part of your emergency fund. It is not separate from Step 4."
+    }
+  },
+  {
+    title:"Employer Match",
+    type:"percent",
+    target:5,
+    current:0,
+    guidance:"Contribute enough to get your full employer match.",
+    detail:{
+      meaning:"This step is about getting the free money from your employer retirement plan.",
+      action:"Find out the exact percentage you need to contribute to receive the full match. Enter that as your target percent, then enter your current contribution percent.",
+      tracking:"This is tracked manually as a percent because the app does not connect to your employer plan yet.",
+      key:"Only contribute enough to get the match at this step. Bigger investing comes later after high-interest debt and emergency savings are handled."
+    }
+  },
+  {
+    title:"High-Interest Debt",
+    type:"highDebt",
+    target:0,
+    current:0,
+    guidance:"Pay off toxic high-interest debt.",
+    detail:{
+      meaning:"This step is for credit cards, personal loans, and other expensive debt that works against your wealth building.",
+      action:"Add each high-interest debt under Accounts as High-Interest Debt. Focus extra money here until these balances hit zero.",
+      tracking:"The app automatically totals all High-Interest Debt accounts and shows the remaining balance here.",
+      key:"Mathematically, highest interest rate first is best. If motivation matters more, smallest balance first can help you stay consistent."
+    }
+  },
+  {
+    title:"Emergency Fund",
+    type:"dollar",
+    target:10000,
+    current:0,
+    guidance:"Build 3–6 months of expenses.",
+    detail:{
+      meaning:"This is your full financial safety net. It protects you from job loss, medical issues, car repairs, home repairs, and family emergencies.",
+      action:"Calculate your monthly expenses, not your income. Multiply that by 3 to 6 months. Use the higher end if your income is unstable, one-income household, or specialized job.",
+      tracking:"Create an Emergency Fund category, link it to Step 4, and link it to your emergency savings account. The app will count that account balance toward this step.",
+      key:"Your Step 1 deductible money counts toward this emergency fund. You do not need two separate piles of money."
+    }
+  },
+  {
+    title:"Roth IRA / HSA",
+    type:"percent",
+    target:10,
+    current:0,
+    guidance:"Build tax-advantaged savings.",
+    detail:{
+      meaning:"This step focuses on powerful tax-advantaged accounts outside your basic employer match.",
+      action:"Use Roth IRA and HSA options if you qualify. If you are not eligible for one of them, skip what does not apply.",
+      tracking:"For now, track this as a percent or progress estimate manually.",
+      key:"This does not erase Step 2. Your total investing at this point includes your employer match contribution plus what you are adding here."
+    }
+  },
+  {
+    title:"Max Employer Plans",
+    type:"percent",
+    target:15,
+    current:0,
+    guidance:"Increase retirement contributions.",
+    detail:{
+      meaning:"This step is where you push harder into employer retirement plans like 401(k), 403(b), 457, or similar plans.",
+      action:"Increase your employer-plan contribution after Steps 1 through 5 are handled. Your long-term goal is to max the account or reach a strong total investing rate.",
+      tracking:"Enter your current total retirement contribution percent manually.",
+      key:"Important: this percentage stacks with earlier investing. If you are already doing 5% for match and later add more, count the total. Some people can move on when their total investing rate reaches about 25%, even if they do not fully max the employer plan."
+    }
+  },
+  {
+    title:"Hyper-Accumulation",
+    type:"percent",
+    target:25,
+    current:0,
+    guidance:"Invest beyond retirement accounts.",
+    detail:{
+      meaning:"Hyperaccumulation means you are investing heavily enough that wealth building becomes a major priority.",
+      action:"Aim for a total investing rate of 25% or more of income. This can include employer plans, Roth IRA, HSA, brokerage, and other long-term investing.",
+      tracking:"Enter your total investing rate manually.",
+      key:"This is not another separate 25% on top of earlier steps. It means your total investing rate is 25% or higher."
+    }
+  },
+  {
+    title:"Prepaid Future Expenses",
+    type:"dollar",
+    target:5000,
+    current:0,
+    guidance:"Save for future planned expenses.",
+    detail:{
+      meaning:"This step is for bigger future goals after your main financial foundation is strong.",
+      action:"Use this for things like kids college, future vehicle, big vacations, home upgrades, real estate, or other long-term goals.",
+      tracking:"Create a budget category for the goal, link it to Step 8, and link it to the account holding that money.",
+      key:"This step looks different for everyone. You may need a lot here or very little depending on your family and goals."
+    }
+  },
+  {
+    title:"Low-Interest Debt",
+    type:"lowDebt",
+    target:0,
+    current:0,
+    guidance:"Pay down remaining low-interest debt.",
+    detail:{
+      meaning:"This is the final cleanup stage for lower-interest debts like a mortgage, certain student loans, or other low-rate debt.",
+      action:"Add these debts as Low-Interest Debt accounts. Once earlier wealth-building steps are handled, use extra money to pay these down.",
+      tracking:"The app automatically totals Low-Interest Debt accounts and shows the remaining balance here.",
+      key:"This comes late because low-interest debt usually does not need to beat out emergency savings, investing, and high-interest debt payoff."
+    }
+  }
 ];
 
 function money(num) {
@@ -370,12 +502,13 @@ function toggleForm(id) {
 }
 
 function saveAll() {
-  localStorage.setItem("v4_income", income);
-  localStorage.setItem("v4_accounts", JSON.stringify(accounts));
-  localStorage.setItem("v4_categories", JSON.stringify(categories));
-  localStorage.setItem("v4_transactions", JSON.stringify(transactions));
-  localStorage.setItem("v4_fooSteps", JSON.stringify(fooSteps));
-  localStorage.setItem("v4_fooOpen", JSON.stringify(fooOpen));
+  localStorage.setItem("v5_income", income);
+  localStorage.setItem("v5_accounts", JSON.stringify(accounts));
+  localStorage.setItem("v5_categories", JSON.stringify(categories));
+  localStorage.setItem("v5_transactions", JSON.stringify(transactions));
+  localStorage.setItem("v5_fooSteps", JSON.stringify(fooSteps));
+  localStorage.setItem("v5_fooOpen", JSON.stringify(fooOpen));
+  localStorage.setItem("v5_fooInfoOpen", JSON.stringify(fooInfoOpen));
 }
 
 function showScreen(id, tab) {
@@ -651,6 +784,12 @@ function toggleFooOpen(index) {
   render();
 }
 
+function toggleFooInfo(index) {
+  fooInfoOpen[index] = !fooInfoOpen[index];
+  saveAll();
+  render();
+}
+
 function updateFoo(index, field, value) {
   if (field === "target" || field === "current") {
     fooSteps[index][field] = Number(value) || 0;
@@ -811,6 +950,7 @@ function render() {
   document.getElementById("fooSteps").innerHTML = fooSteps.map((s, i) => {
     const pct = fooProgress(s);
     const isOpen = fooOpen[i];
+    const infoOpen = fooInfoOpen[i];
     const status = fooStatus(s);
 
     let currentLabel = "$" + money(s.current);
@@ -839,10 +979,29 @@ function render() {
               <p class="muted">${s.guidance}</p>
               <p><strong>${currentLabel}</strong> / ${targetLabel}</p>
             </div>
-            <h2>${isOpen ? "⌃" : "⌄"}</h2>
+            <div>
+              <button class="info-btn" onclick="event.stopPropagation(); toggleFooInfo(${i})">ⓘ</button>
+              <h2>${isOpen ? "⌃" : "⌄"}</h2>
+            </div>
           </div>
           <div class="progress-bg"><div class="progress-bar" style="width:${pct}%"></div></div>
         </div>
+
+        ${infoOpen ? `
+          <div class="info-box">
+            <h3>What this step means</h3>
+            <p>${s.detail.meaning}</p>
+
+            <h3>What you need to do</h3>
+            <p>${s.detail.action}</p>
+
+            <h3>How Money Mission tracks it</h3>
+            <p>${s.detail.tracking}</p>
+
+            <h3>Key detail</h3>
+            <p>${s.detail.key}</p>
+          </div>
+        ` : ""}
 
         <div class="foo-details ${isOpen ? "open" : ""}">
           <p><strong>Goal Type:</strong> ${
