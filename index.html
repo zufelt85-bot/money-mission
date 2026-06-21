@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Money Mission V2</title>
+  <title>Money Mission V3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; }
@@ -33,6 +33,7 @@
     .blue { color: #2563eb; }
     .muted { color: #6b7280; }
     .tiny { font-size: 13px; }
+
     input, select, textarea, button {
       width: 100%;
       padding: 14px;
@@ -41,21 +42,27 @@
       border-radius: 12px;
       border: 1px solid #d1d5db;
     }
+
     textarea { min-height: 70px; resize: vertical; }
+
     button {
       background: #2563eb;
       color: white;
       border: none;
       font-weight: bold;
     }
+
     .danger { background: #dc2626; }
     .dark { background: #111827; }
+    .hidden { display: none; }
+
     .row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
     }
+
     .progress-bg {
       background: #e5e7eb;
       height: 10px;
@@ -63,11 +70,13 @@
       overflow: hidden;
       margin-top: 8px;
     }
+
     .progress-bar {
       height: 100%;
       background: #16a34a;
       width: 0%;
     }
+
     .tabbar {
       position: fixed;
       bottom: 0;
@@ -81,6 +90,7 @@
       align-items: center;
       z-index: 99;
     }
+
     .tab { text-align: center; font-size: 13px; color: #6b7280; cursor: pointer; }
     .tab span { display: block; font-size: 24px; margin-bottom: 3px; }
     .tab.active { color: #2563eb; font-weight: bold; }
@@ -89,6 +99,7 @@
       padding: 6px 10px;
       border-radius: 999px;
     }
+
     .pill {
       display: inline-block;
       padding: 4px 10px;
@@ -98,22 +109,32 @@
       background: #e5e7eb;
       color: #374151;
     }
+
     .pill.completed { background: #dcfce7; color: #15803d; }
     .pill.progress { background: #dbeafe; color: #1d4ed8; }
-    .pill.debt { background: #fee2e2; color: #b91c1c; }
+
     .foo-card.completed { background: #ecfdf5; border-color: #86efac; }
     .foo-card.progress { background: #eff6ff; border-color: #93c5fd; }
     .foo-header { cursor: pointer; }
     .foo-details { display: none; margin-top: 15px; }
     .foo-details.open { display: block; }
-    .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
     .typeBtn {
       background: white;
       color: #111827;
       border: 1px solid #d1d5db;
+      font-size: 14px;
     }
+
     .typeBtn.selectedExpense { border: 2px solid #dc2626; color: #dc2626; }
     .typeBtn.selectedIncome { border: 2px solid #16a34a; color: #16a34a; }
+    .typeBtn.selectedTransfer { border: 2px solid #2563eb; color: #2563eb; }
   </style>
 </head>
 
@@ -128,15 +149,18 @@
       <div class="stat-title">Assets</div>
       <div class="stat-number green">$<span id="homeAssets">0</span></div>
     </div>
+
     <div class="card">
       <div class="stat-title">Total Debt</div>
       <div class="stat-number red">$<span id="homeDebts">0</span></div>
     </div>
+
     <div class="card">
       <div class="stat-title">Budgeted</div>
       <div class="stat-number">$<span id="homeBudgeted">0</span></div>
       <div class="muted tiny">of $<span id="homeIncomeSmall">0</span></div>
     </div>
+
     <div class="card">
       <div class="stat-title">FOO</div>
       <div class="stat-number"><span id="homeFooDone">0</span>/9</div>
@@ -211,13 +235,14 @@
 
 <div id="activity" class="screen">
   <h1>Activity</h1>
-  <div class="subtitle">Track income, expenses, and savings</div>
+  <div class="subtitle">Income, expenses, and transfers</div>
 
   <div class="grid">
     <div class="card">
       <div class="stat-title">Income</div>
       <div class="stat-number green">$<span id="activityIncome">0</span></div>
     </div>
+
     <div class="card">
       <div class="stat-title">Expenses</div>
       <div class="stat-number red">$<span id="activityExpenses">0</span></div>
@@ -226,17 +251,27 @@
 
   <div class="card">
     <h2>Add Transaction</h2>
+
     <div class="type-grid">
       <button id="expenseBtn" class="typeBtn selectedExpense" onclick="setTxType('expense')">↘ Expense</button>
       <button id="incomeBtn" class="typeBtn" onclick="setTxType('income')">↗ Income</button>
+      <button id="transferBtn" class="typeBtn" onclick="setTxType('transfer')">↔ Transfer</button>
     </div>
 
     <input id="txAmount" type="number" placeholder="Amount">
     <input id="txDate" type="date">
+
+    <label class="muted tiny">From / Account</label>
     <select id="txAccount"></select>
+
+    <label id="toAccountLabel" class="muted tiny hidden">To Account</label>
+    <select id="txToAccount" class="hidden"></select>
+
     <select id="txCategory"></select>
+
     <input id="txName" placeholder="Payee / Description">
     <textarea id="txNote" placeholder="Notes optional"></textarea>
+
     <button onclick="addTransaction()">+ Add Transaction</button>
   </div>
 
@@ -287,23 +322,23 @@
 </div>
 
 <script>
-let income = Number(localStorage.getItem("v2_income")) || 0;
-let accounts = JSON.parse(localStorage.getItem("v2_accounts")) || [];
-let categories = JSON.parse(localStorage.getItem("v2_categories")) || [];
-let transactions = JSON.parse(localStorage.getItem("v2_transactions")) || [];
+let income = Number(localStorage.getItem("v3_income")) || 0;
+let accounts = JSON.parse(localStorage.getItem("v3_accounts")) || [];
+let categories = JSON.parse(localStorage.getItem("v3_categories")) || [];
+let transactions = JSON.parse(localStorage.getItem("v3_transactions")) || [];
 let txType = "expense";
-let fooOpen = JSON.parse(localStorage.getItem("v2_fooOpen")) || {};
+let fooOpen = JSON.parse(localStorage.getItem("v3_fooOpen")) || {};
 
-let fooSteps = JSON.parse(localStorage.getItem("v2_fooSteps")) || [
-  { title:"Deductibles Covered", type:"dollar", target:2500, current:0, status:"notstarted", guidance:"Save enough to cover your highest insurance deductible." },
-  { title:"Employer Match", type:"percent", target:5, current:0, status:"notstarted", guidance:"Contribute enough to get your full employer match." },
-  { title:"High-Interest Debt", type:"highDebt", target:0, current:0, status:"notstarted", guidance:"Pay off toxic high-interest debt." },
-  { title:"Emergency Fund", type:"dollar", target:10000, current:0, status:"notstarted", guidance:"Build 3–6 months of expenses." },
-  { title:"Roth IRA / HSA", type:"percent", target:10, current:0, status:"notstarted", guidance:"Build tax-advantaged savings." },
-  { title:"Max Retirement", type:"percent", target:15, current:0, status:"notstarted", guidance:"Increase retirement contributions." },
-  { title:"Hyper-Accumulation", type:"percent", target:25, current:0, status:"notstarted", guidance:"Invest beyond retirement accounts." },
-  { title:"Prepaid Future Expenses", type:"dollar", target:5000, current:0, status:"notstarted", guidance:"Save for future planned expenses." },
-  { title:"Low-Interest Debt", type:"lowDebt", target:0, current:0, status:"notstarted", guidance:"Pay down remaining low-interest debt." }
+let fooSteps = JSON.parse(localStorage.getItem("v3_fooSteps")) || [
+  { title:"Deductibles Covered", type:"dollar", target:2500, current:0, guidance:"Save enough to cover your highest insurance deductible." },
+  { title:"Employer Match", type:"percent", target:5, current:0, guidance:"Contribute enough to get your full employer match." },
+  { title:"High-Interest Debt", type:"highDebt", target:0, current:0, guidance:"Pay off toxic high-interest debt." },
+  { title:"Emergency Fund", type:"dollar", target:10000, current:0, guidance:"Build 3–6 months of expenses." },
+  { title:"Roth IRA / HSA", type:"percent", target:10, current:0, guidance:"Build tax-advantaged savings." },
+  { title:"Max Retirement", type:"percent", target:15, current:0, guidance:"Increase retirement contributions." },
+  { title:"Hyper-Accumulation", type:"percent", target:25, current:0, guidance:"Invest beyond retirement accounts." },
+  { title:"Prepaid Future Expenses", type:"dollar", target:5000, current:0, guidance:"Save for future planned expenses." },
+  { title:"Low-Interest Debt", type:"lowDebt", target:0, current:0, guidance:"Pay down remaining low-interest debt." }
 ];
 
 function money(num) {
@@ -315,12 +350,12 @@ function todayDate() {
 }
 
 function saveAll() {
-  localStorage.setItem("v2_income", income);
-  localStorage.setItem("v2_accounts", JSON.stringify(accounts));
-  localStorage.setItem("v2_categories", JSON.stringify(categories));
-  localStorage.setItem("v2_transactions", JSON.stringify(transactions));
-  localStorage.setItem("v2_fooSteps", JSON.stringify(fooSteps));
-  localStorage.setItem("v2_fooOpen", JSON.stringify(fooOpen));
+  localStorage.setItem("v3_income", income);
+  localStorage.setItem("v3_accounts", JSON.stringify(accounts));
+  localStorage.setItem("v3_categories", JSON.stringify(categories));
+  localStorage.setItem("v3_transactions", JSON.stringify(transactions));
+  localStorage.setItem("v3_fooSteps", JSON.stringify(fooSteps));
+  localStorage.setItem("v3_fooOpen", JSON.stringify(fooOpen));
 }
 
 function showScreen(id, tab) {
@@ -335,10 +370,6 @@ function goTab(id) {
   const tabs = document.querySelectorAll(".tab");
   const index = { home:0, foo:1, budget:2, activity:3, accounts:4 }[id];
   showScreen(id, tabs[index]);
-}
-
-function assetAccounts() {
-  return accounts.filter(a => a.type === "asset");
 }
 
 function accountName(index) {
@@ -358,6 +389,7 @@ function addAccount() {
   accounts.push({ name, balance, type });
   document.getElementById("accountName").value = "";
   document.getElementById("accountBalance").value = "";
+
   saveAll();
   render();
 }
@@ -372,6 +404,8 @@ function deleteAccount(index) {
 function renderAccountDropdowns() {
   const catAccount = document.getElementById("catAccount");
   const txAccount = document.getElementById("txAccount");
+  const txToAccount = document.getElementById("txToAccount");
+  const toAccountLabel = document.getElementById("toAccountLabel");
 
   const assetOptions = accounts.map((a, i) => {
     if (a.type !== "asset") return "";
@@ -382,6 +416,15 @@ function renderAccountDropdowns() {
 
   if (catAccount) catAccount.innerHTML = assetOptions || empty;
   if (txAccount) txAccount.innerHTML = assetOptions || empty;
+  if (txToAccount) txToAccount.innerHTML = assetOptions || empty;
+
+  if (txType === "transfer") {
+    txToAccount.classList.remove("hidden");
+    toAccountLabel.classList.remove("hidden");
+  } else {
+    txToAccount.classList.add("hidden");
+    toAccountLabel.classList.add("hidden");
+  }
 }
 
 function addCategory() {
@@ -404,13 +447,13 @@ function addCategory() {
     name,
     amount,
     spent: 0,
-    saved: 0,
     accountIndex: Number(accountIndex),
     fooStep: fooStep === "" ? "" : Number(fooStep)
   });
 
   document.getElementById("catName").value = "";
   document.getElementById("catAmount").value = "";
+
   saveAll();
   render();
 }
@@ -423,15 +466,16 @@ function deleteCategory(index) {
 
 function setTxType(type) {
   txType = type;
+
   document.getElementById("expenseBtn").className = "typeBtn";
   document.getElementById("incomeBtn").className = "typeBtn";
+  document.getElementById("transferBtn").className = "typeBtn";
 
-  if (type === "expense") {
-    document.getElementById("expenseBtn").classList.add("selectedExpense");
-  } else {
-    document.getElementById("incomeBtn").classList.add("selectedIncome");
-  }
+  if (type === "expense") document.getElementById("expenseBtn").classList.add("selectedExpense");
+  if (type === "income") document.getElementById("incomeBtn").classList.add("selectedIncome");
+  if (type === "transfer") document.getElementById("transferBtn").classList.add("selectedTransfer");
 
+  renderAccountDropdowns();
   renderCategoryDropdown();
 }
 
@@ -440,9 +484,18 @@ function renderCategoryDropdown() {
   if (!select) return;
 
   if (txType === "income") {
+    select.classList.add("hidden");
     select.innerHTML = `<option value="Income">Income</option>`;
     return;
   }
+
+  if (txType === "transfer") {
+    select.classList.add("hidden");
+    select.innerHTML = `<option value="Transfer">Transfer</option>`;
+    return;
+  }
+
+  select.classList.remove("hidden");
 
   if (categories.length === 0) {
     select.innerHTML = `<option value="">Add categories first</option>`;
@@ -457,9 +510,15 @@ function renderCategoryDropdown() {
 function refreshFooAutoValues() {
   fooSteps.forEach((s, i) => {
     if (s.type === "dollar") {
-      s.current = categories
-        .filter(c => Number(c.fooStep) === i)
-        .reduce((sum, c) => sum + c.saved, 0);
+      const linkedAccountIndexes = [...new Set(
+        categories
+          .filter(c => Number(c.fooStep) === i)
+          .map(c => Number(c.accountIndex))
+      )];
+
+      s.current = linkedAccountIndexes.reduce((sum, accountIndex) => {
+        return sum + (accounts[accountIndex]?.balance || 0);
+      }, 0);
     }
 
     if (s.type === "highDebt") {
@@ -482,6 +541,7 @@ function addTransaction() {
   const amount = Number(document.getElementById("txAmount").value);
   const date = document.getElementById("txDate").value || todayDate();
   const accountIndex = document.getElementById("txAccount").value;
+  const toAccountIndex = document.getElementById("txToAccount").value;
   const categoryValue = document.getElementById("txCategory").value;
   const name = document.getElementById("txName").value.trim();
   const note = document.getElementById("txNote").value.trim();
@@ -493,6 +553,32 @@ function addTransaction() {
 
   if (accountIndex === "") {
     alert("Select an account.");
+    return;
+  }
+
+  if (txType === "transfer") {
+    if (toAccountIndex === "" || accountIndex === toAccountIndex) {
+      alert("Select a different account to transfer to.");
+      return;
+    }
+
+    accounts[Number(accountIndex)].balance -= amount;
+    accounts[Number(toAccountIndex)].balance += amount;
+
+    transactions.unshift({
+      amount,
+      date,
+      account: accountName(Number(accountIndex)) + " → " + accountName(Number(toAccountIndex)),
+      category: "Transfer",
+      type: "transfer",
+      name,
+      note
+    });
+
+    clearTransactionForm();
+    refreshFooAutoValues();
+    saveAll();
+    render();
     return;
   }
 
@@ -509,11 +595,6 @@ function addTransaction() {
 
     const c = categories[Number(categoryValue)];
     c.spent += amount;
-
-    if (c.fooStep !== "") {
-      c.saved += amount;
-    }
-
     accounts[Number(accountIndex)].balance -= amount;
     categoryName = c.name;
   }
@@ -528,14 +609,17 @@ function addTransaction() {
     note
   });
 
+  clearTransactionForm();
+  refreshFooAutoValues();
+  saveAll();
+  render();
+}
+
+function clearTransactionForm() {
   document.getElementById("txAmount").value = "";
   document.getElementById("txName").value = "";
   document.getElementById("txNote").value = "";
   document.getElementById("txDate").value = todayDate();
-
-  refreshFooAutoValues();
-  saveAll();
-  render();
 }
 
 function toggleFooOpen(index) {
@@ -550,6 +634,7 @@ function updateFoo(index, field, value) {
   } else {
     fooSteps[index][field] = value;
   }
+
   saveAll();
   render();
 }
@@ -655,7 +740,7 @@ function render() {
           <div class="row">
             <div>
               <h3>${c.name}</h3>
-              <p class="muted">$${money(c.amount)} budgeted • $${money(c.saved)} saved</p>
+              <p class="muted">$${money(c.amount)} budgeted</p>
               <p class="muted">${c.fooStep !== "" ? "Linked to FOO Step " + (Number(c.fooStep)+1) : "No FOO link"}</p>
             </div>
             <h3 class="${c.amount - c.spent >= 0 ? "green" : "red"}">$${money(c.amount - c.spent)}</h3>
@@ -681,15 +766,20 @@ function render() {
 
   document.getElementById("transactionList").innerHTML =
     transactions.length === 0 ? `<p class="muted">No transactions yet.</p>` :
-    transactions.map(t => `
-      <div class="row" style="border-bottom:1px solid #e5e7eb; padding:12px 0;">
-        <div>
-          <strong>${t.name}</strong>
-          <p class="muted">${t.type} • ${t.category} • ${t.account} • ${t.date}</p>
+    transactions.map(t => {
+      const sign = t.type === "income" ? "+" : t.type === "expense" ? "-" : "↔ ";
+      const amountClass = t.type === "income" ? "green" : t.type === "expense" ? "red" : "blue";
+
+      return `
+        <div class="row" style="border-bottom:1px solid #e5e7eb; padding:12px 0;">
+          <div>
+            <strong>${t.name}</strong>
+            <p class="muted">${t.type} • ${t.category} • ${t.account} • ${t.date}</p>
+          </div>
+          <h3 class="${amountClass}">${sign}$${money(t.amount)}</h3>
         </div>
-        <h3 class="${t.type === "income" ? "green" : "red"}">${t.type === "income" ? "+" : "-"}$${money(t.amount)}</h3>
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
   document.getElementById("assetList").innerHTML = renderAccountGroup("asset");
   document.getElementById("highDebtList").innerHTML = renderAccountGroup("highDebt");
@@ -719,7 +809,9 @@ function render() {
           <div class="row">
             <div>
               <strong>STEP ${i+1}</strong>
-              <span class="pill ${status}">${status === "completed" ? "Completed" : status === "progress" ? "In Progress" : "Not Started"}</span>
+              <span class="pill ${status}">
+                ${status === "completed" ? "Completed" : status === "progress" ? "In Progress" : "Not Started"}
+              </span>
               <h2>${s.title}</h2>
               <p class="muted">${s.guidance}</p>
               <p><strong>${currentLabel}</strong> / ${targetLabel}</p>
@@ -730,7 +822,11 @@ function render() {
         </div>
 
         <div class="foo-details ${isOpen ? "open" : ""}">
-          <p><strong>Goal Type:</strong> ${s.type === "dollar" ? "Dollar Goal" : s.type === "percent" ? "Percent Goal" : "Debt Payoff Goal"}</p>
+          <p><strong>Goal Type:</strong> ${
+            s.type === "dollar" ? "Dollar Goal" :
+            s.type === "percent" ? "Percent Goal" :
+            "Debt Payoff Goal"
+          }</p>
 
           ${s.type === "percent" ? `
             <label>Target Percent</label>
@@ -742,11 +838,13 @@ function render() {
           ${s.type === "dollar" ? `
             <label>Target Amount</label>
             <input type="number" value="${s.target}" onchange="updateFoo(${i}, 'target', this.value)">
-            <p class="muted">Current amount updates from linked budget categories.</p>
+            <p class="muted">Current amount updates from linked account balances.</p>
           ` : ""}
 
           ${(s.type === "highDebt" || s.type === "lowDebt") ? `
-            <p class="muted">This updates automatically from your ${s.type === "highDebt" ? "High-Interest Debt" : "Low-Interest Debt"} accounts.</p>
+            <p class="muted">This updates automatically from your ${
+              s.type === "highDebt" ? "High-Interest Debt" : "Low-Interest Debt"
+            } accounts.</p>
           ` : ""}
         </div>
       </div>
