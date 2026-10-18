@@ -1,4 +1,4 @@
-const CACHE_NAME = "money-mission-v9-16-0";
+const CACHE_NAME = "money-mission-v9-16-1";
 // V9.16.0: guide pictures are cached for offline use. Existing manifest/icons remain optional
 // during service-worker installation, so missing deployment assets cannot break the whole app.
 const APP_SHELL = [
@@ -29,7 +29,8 @@ const APP_SHELL = [
 const OPTIONAL_PWA_ASSETS = [
   "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./splash-screen.png"
 ];
 
 self.addEventListener("install", event => {
